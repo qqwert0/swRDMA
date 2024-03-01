@@ -1,0 +1,3 @@
+add_cells_to_pblock [get_pblocks pblock_qdmaInst] [get_cells -quiet [get_cells -hier -regexp -filter {NAME =~ core/HD_PR_Connection_.*}]]
+add_cells_to_pblock [get_pblocks pblock_qdmaInst] [get_cells -quiet [get_cells -hier -regexp -filter {NAME =~ core/GND_HD_Inserted_.*}]]
+add_cells_to_pblock [get_pblocks pblock_qdmaInst] [get_cells -quiet [get_cells -hier -regexp -filter {NAME =~ core/VCC_HD_Inserted_.*}]]

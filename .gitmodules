@@ -1,0 +1,15 @@
+[submodule "common"]
+	path = common
+	url = git@github.com:carlzhang4/common.git
+[submodule "qdma"]
+	path = qdma
+	url = git@github.com:RC4ML/qdma.git
+[submodule "hbm"]
+	path = hbm
+	url = git@github.com:RC4ML/chisel_hbm.git
+[submodule "cmac"]
+	path = cmac
+	url = git@github.com:carlzhang4/cmac.git
+[submodule "ddr"]
+	path = ddr
+	url = git@github.com:rc4ml/ddr.git
