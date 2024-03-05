@@ -51,6 +51,7 @@ object elaborate extends App {
 		case "QDMARandomCPUTop" => stage.execute(arr, Seq(ChiselGeneratorAnnotation(() => new QDMARandomCPUTop()), dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
 		case "QDMALatencyCPUTop" => stage.execute(arr, Seq(ChiselGeneratorAnnotation(() => new QDMALatencyCPUTop()), dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
 		case "QDMAAXILBenchmarkTop" => stage.execute(arr, Seq(ChiselGeneratorAnnotation(() => new QDMAAXILBenchmarkTop()), dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
+		//case "PkgGen" => stage.execute(arr, Seq(ChiselGeneratorAnnotation(() => new PkgGen()), dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
 		case _ => println("Module match failed!")
 	}
 }

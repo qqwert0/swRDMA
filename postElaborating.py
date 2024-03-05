@@ -285,7 +285,7 @@ except:
 	print("No txt file to be deleted")
 
 print("Running mill " + projectName+" " + moduleName)
-p = subprocess.Popen(["mill", projectName, moduleName])
+p = subprocess.Popen(["./mill", projectName, moduleName])
 p.wait()
 ret = p.returncode
 

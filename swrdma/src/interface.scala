@@ -11,7 +11,7 @@ import common._
 class User_Header()extends Bundle{
     val queue   = UInt(32.W)
     val time    = UInt(32.W)
-    val des_port = = UInt(32.W)
+    val des_port = UInt(32.W)
 }
 
 

@@ -12,6 +12,9 @@ object elaborate extends App {
 	val dir 	= TargetDirAnnotation("Verilog")
 
 	args(0) match{
+		//case "PkgGen" => stage.execute(arr, Seq(ChiselGeneratorAnnotation(() => new PkgGen()), dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
+		case "Foo" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new Foo()),dir))
+		case "PkgGen" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PkgGen()),dir))
 		case _ => println("Module match failed!")
 	}
 }
