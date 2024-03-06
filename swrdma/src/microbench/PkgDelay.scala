@@ -48,7 +48,7 @@ class PkgDelay extends Module{
 	io.data_out.bits.last:=1.U
 	io.data_out.bits.keep:= "hffffffffffffffff".U(64.W)
 	when(io.data_out.ready===1.U){
-		data_queue_valid(cursor_head) := 0.U
+		//data_queue_valid(cursor_head) := 0.U
 		cursor_head:=(cursor_head+1.U)%cursor_len
 		cursor_tail:=(cursor_tail+1.U)%cursor_len
 	}
