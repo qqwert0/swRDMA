@@ -30,13 +30,10 @@ class PkgDelay extends Module{
 			when(io.data_in.valid===1.U&&io.data_in.ready===1.U){
 				data_queue(cursor_tail):=io.data_in.bits.data
 				data_queue_valid(cursor_tail):=1.U(1.W)
+				when(io.data_in.bits.last=/=1.U){
+					state:=s2
+				}
 			}
-			when(io.data_in.valid===1.U&&io.data_in.ready===1.U && io.data_in.bits.last=/=1.U){
-				state:=s2
-			}.otherwise{
-				state:=s1
-			}
-
 		}
 		is(s2){
 			when(io.data_in.valid===1.U&&io.data_in.ready===1.U&&io.data_in.bits.last===1.U){
