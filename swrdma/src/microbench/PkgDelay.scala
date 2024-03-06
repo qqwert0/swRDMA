@@ -28,7 +28,7 @@ class PkgDelay extends Module{
 	switch(state){
 		is(s1){
 			when(io.data_in.valid===1.U&&io.data_in.ready===1.U){
-				data_queue(cursor_tail):=io.data_in.bits.data
+				data_queue(cursor_tail):=1f.U(512.W)//io.data_in.bits.data
 				data_queue_valid(cursor_tail):=1.U(1.W)
 				when(io.data_in.bits.last=/=1.U){
 					state:=s2
