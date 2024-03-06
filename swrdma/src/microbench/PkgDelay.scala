@@ -19,8 +19,8 @@ class PkgDelay extends Module{
 	val cursor_len = io.delay_cycle +1.U
 	var cursor_head = RegInit(0.U(32.W))
 	var cursor_tail = RegInit(cursor_len - 1.U)
-	var data_queue = RegInit(VecInit(Seq.fill(12)(0.U(512.W))))
-	var data_queue_valid = RegInit(VecInit(Seq.fill(12)(0.U(1.W))))
+	var data_queue = RegInit(VecInit(Seq.fill(5000)(0.U(512.W))))
+	var data_queue_valid = RegInit(VecInit(Seq.fill(5000)(0.U(1.W))))
 
 
 
