@@ -21,10 +21,8 @@ class PkgDelay extends Module{
 	var cursor_tail = RegInit(cursor_len - 1.U)
 	var data_queue = RegInit(VecInit(Seq.fill(12)(0.U(512.W))))
 	var data_queue_valid = RegInit(VecInit(Seq.fill(12)(0.U(1.W))))
-	//RegInit(Vec(Seq.fill(n)(0.U(32.W))))
-	var data_cache = Reg(UInt(512.W))
 
-	data_cache:=io.data_in.bits.data
+
 
 	val s1 :: s2 :: Nil = Enum(2)
 	val state = RegInit(s1)
@@ -49,12 +47,12 @@ class PkgDelay extends Module{
 	io.data_out.bits.last:=1.U
 	io.data_out.bits.keep:= "hffffffffffffffff".U(64.W)
 	when(io.data_out.ready===1.U){
-		//data_queue_valid(cursor_head) := 0.U
+		data_queue_valid(cursor_head) := 0.U
 		cursor_head:=(cursor_head+1.U)%cursor_len
 		cursor_tail:=(cursor_tail+1.U)%cursor_len
 	}
 	when(state === s1 &&io.data_in.valid===1.U&&io.data_in.ready===1.U){
 			data_queue_valid(cursor_tail):=1.U(1.W)
-			data_queue(cursor_tail):=data_cache
+			data_queue(cursor_tail):=io.data_in.bits.data
 	}
 }

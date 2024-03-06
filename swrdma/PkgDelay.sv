@@ -40,8 +40,7 @@ module PkgDelay(
   reg [31:0] _RAND_23;
   reg [31:0] _RAND_24;
   reg [31:0] _RAND_25;
-  reg [511:0] _RAND_26;
-  reg [31:0] _RAND_27;
+  reg [31:0] _RAND_26;
 `endif // RANDOMIZE_REG_INIT
   wire [31:0] cursor_len = io_delay_cycle + 32'h1; // @[PkgDelay.scala 19:41]
   reg [31:0] cursor_head; // @[PkgDelay.scala 20:34]
@@ -71,219 +70,289 @@ module PkgDelay(
   reg  data_queue_valid_9; // @[PkgDelay.scala 23:39]
   reg  data_queue_valid_10; // @[PkgDelay.scala 23:39]
   reg  data_queue_valid_11; // @[PkgDelay.scala 23:39]
-  reg [511:0] data_cache; // @[PkgDelay.scala 25:29]
-  reg  state; // @[PkgDelay.scala 30:28]
+  reg  state; // @[PkgDelay.scala 28:28]
   wire  _T = ~state; // @[Conditional.scala 37:30]
-  wire  _T_3 = io_data_in_valid & io_data_in_ready; // @[PkgDelay.scala 33:52]
-  wire  _T_5 = io_data_in_valid & io_data_in_ready & ~io_data_in_bits_last; // @[PkgDelay.scala 33:76]
-  wire  _GEN_5 = 4'h1 == cursor_head[3:0] ? data_queue_valid_1 : data_queue_valid_0; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_6 = 4'h2 == cursor_head[3:0] ? data_queue_valid_2 : _GEN_5; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_7 = 4'h3 == cursor_head[3:0] ? data_queue_valid_3 : _GEN_6; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_8 = 4'h4 == cursor_head[3:0] ? data_queue_valid_4 : _GEN_7; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_9 = 4'h5 == cursor_head[3:0] ? data_queue_valid_5 : _GEN_8; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_10 = 4'h6 == cursor_head[3:0] ? data_queue_valid_6 : _GEN_9; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_11 = 4'h7 == cursor_head[3:0] ? data_queue_valid_7 : _GEN_10; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_12 = 4'h8 == cursor_head[3:0] ? data_queue_valid_8 : _GEN_11; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_13 = 4'h9 == cursor_head[3:0] ? data_queue_valid_9 : _GEN_12; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire  _GEN_14 = 4'ha == cursor_head[3:0] ? data_queue_valid_10 : _GEN_13; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  wire [511:0] _GEN_17 = 4'h1 == cursor_head[3:0] ? data_queue_1 : data_queue_0; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_18 = 4'h2 == cursor_head[3:0] ? data_queue_2 : _GEN_17; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_19 = 4'h3 == cursor_head[3:0] ? data_queue_3 : _GEN_18; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_20 = 4'h4 == cursor_head[3:0] ? data_queue_4 : _GEN_19; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_21 = 4'h5 == cursor_head[3:0] ? data_queue_5 : _GEN_20; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_22 = 4'h6 == cursor_head[3:0] ? data_queue_6 : _GEN_21; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_23 = 4'h7 == cursor_head[3:0] ? data_queue_7 : _GEN_22; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_24 = 4'h8 == cursor_head[3:0] ? data_queue_8 : _GEN_23; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_25 = 4'h9 == cursor_head[3:0] ? data_queue_9 : _GEN_24; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [511:0] _GEN_26 = 4'ha == cursor_head[3:0] ? data_queue_10 : _GEN_25; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  wire [31:0] _cursor_head_T_1 = cursor_head + 32'h1; // @[PkgDelay.scala 53:42]
-  wire [31:0] _GEN_0 = _cursor_head_T_1 % cursor_len; // @[PkgDelay.scala 53:47]
-  wire [31:0] _cursor_head_T_2 = _GEN_0[31:0]; // @[PkgDelay.scala 53:47]
-  wire [31:0] _cursor_tail_T_3 = cursor_tail + 32'h1; // @[PkgDelay.scala 54:42]
-  wire [31:0] _GEN_1 = _cursor_tail_T_3 % cursor_len; // @[PkgDelay.scala 54:47]
-  wire [31:0] _cursor_tail_T_4 = _GEN_1[31:0]; // @[PkgDelay.scala 54:47]
-  wire  _GEN_30 = 4'h0 == cursor_tail[3:0] | data_queue_valid_0; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_31 = 4'h1 == cursor_tail[3:0] | data_queue_valid_1; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_32 = 4'h2 == cursor_tail[3:0] | data_queue_valid_2; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_33 = 4'h3 == cursor_tail[3:0] | data_queue_valid_3; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_34 = 4'h4 == cursor_tail[3:0] | data_queue_valid_4; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_35 = 4'h5 == cursor_tail[3:0] | data_queue_valid_5; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_36 = 4'h6 == cursor_tail[3:0] | data_queue_valid_6; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_37 = 4'h7 == cursor_tail[3:0] | data_queue_valid_7; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_38 = 4'h8 == cursor_tail[3:0] | data_queue_valid_8; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_39 = 4'h9 == cursor_tail[3:0] | data_queue_valid_9; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_40 = 4'ha == cursor_tail[3:0] | data_queue_valid_10; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
-  wire  _GEN_41 = 4'hb == cursor_tail[3:0] | data_queue_valid_11; // @[PkgDelay.scala 57:54 PkgDelay.scala 57:54 PkgDelay.scala 23:39]
+  wire  _T_3 = io_data_in_valid & io_data_in_ready; // @[PkgDelay.scala 31:52]
+  wire  _T_5 = io_data_in_valid & io_data_in_ready & ~io_data_in_bits_last; // @[PkgDelay.scala 31:76]
+  wire  _GEN_5 = 4'h1 == cursor_head[3:0] ? data_queue_valid_1 : data_queue_valid_0; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_6 = 4'h2 == cursor_head[3:0] ? data_queue_valid_2 : _GEN_5; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_7 = 4'h3 == cursor_head[3:0] ? data_queue_valid_3 : _GEN_6; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_8 = 4'h4 == cursor_head[3:0] ? data_queue_valid_4 : _GEN_7; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_9 = 4'h5 == cursor_head[3:0] ? data_queue_valid_5 : _GEN_8; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_10 = 4'h6 == cursor_head[3:0] ? data_queue_valid_6 : _GEN_9; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_11 = 4'h7 == cursor_head[3:0] ? data_queue_valid_7 : _GEN_10; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_12 = 4'h8 == cursor_head[3:0] ? data_queue_valid_8 : _GEN_11; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_13 = 4'h9 == cursor_head[3:0] ? data_queue_valid_9 : _GEN_12; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire  _GEN_14 = 4'ha == cursor_head[3:0] ? data_queue_valid_10 : _GEN_13; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  wire [511:0] _GEN_17 = 4'h1 == cursor_head[3:0] ? data_queue_1 : data_queue_0; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_18 = 4'h2 == cursor_head[3:0] ? data_queue_2 : _GEN_17; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_19 = 4'h3 == cursor_head[3:0] ? data_queue_3 : _GEN_18; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_20 = 4'h4 == cursor_head[3:0] ? data_queue_4 : _GEN_19; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_21 = 4'h5 == cursor_head[3:0] ? data_queue_5 : _GEN_20; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_22 = 4'h6 == cursor_head[3:0] ? data_queue_6 : _GEN_21; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_23 = 4'h7 == cursor_head[3:0] ? data_queue_7 : _GEN_22; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_24 = 4'h8 == cursor_head[3:0] ? data_queue_8 : _GEN_23; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_25 = 4'h9 == cursor_head[3:0] ? data_queue_9 : _GEN_24; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire [511:0] _GEN_26 = 4'ha == cursor_head[3:0] ? data_queue_10 : _GEN_25; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  wire  _GEN_28 = 4'h0 == cursor_head[3:0] ? 1'h0 : data_queue_valid_0; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_29 = 4'h1 == cursor_head[3:0] ? 1'h0 : data_queue_valid_1; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_30 = 4'h2 == cursor_head[3:0] ? 1'h0 : data_queue_valid_2; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_31 = 4'h3 == cursor_head[3:0] ? 1'h0 : data_queue_valid_3; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_32 = 4'h4 == cursor_head[3:0] ? 1'h0 : data_queue_valid_4; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_33 = 4'h5 == cursor_head[3:0] ? 1'h0 : data_queue_valid_5; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_34 = 4'h6 == cursor_head[3:0] ? 1'h0 : data_queue_valid_6; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_35 = 4'h7 == cursor_head[3:0] ? 1'h0 : data_queue_valid_7; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_36 = 4'h8 == cursor_head[3:0] ? 1'h0 : data_queue_valid_8; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_37 = 4'h9 == cursor_head[3:0] ? 1'h0 : data_queue_valid_9; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_38 = 4'ha == cursor_head[3:0] ? 1'h0 : data_queue_valid_10; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire  _GEN_39 = 4'hb == cursor_head[3:0] ? 1'h0 : data_queue_valid_11; // @[PkgDelay.scala 50:47 PkgDelay.scala 50:47 PkgDelay.scala 23:39]
+  wire [31:0] _cursor_head_T_1 = cursor_head + 32'h1; // @[PkgDelay.scala 51:42]
+  wire [31:0] _GEN_0 = _cursor_head_T_1 % cursor_len; // @[PkgDelay.scala 51:47]
+  wire [31:0] _cursor_head_T_2 = _GEN_0[31:0]; // @[PkgDelay.scala 51:47]
+  wire [31:0] _cursor_tail_T_3 = cursor_tail + 32'h1; // @[PkgDelay.scala 52:42]
+  wire [31:0] _GEN_1 = _cursor_tail_T_3 % cursor_len; // @[PkgDelay.scala 52:47]
+  wire [31:0] _cursor_tail_T_4 = _GEN_1[31:0]; // @[PkgDelay.scala 52:47]
+  wire  _GEN_40 = io_data_out_ready ? _GEN_28 : data_queue_valid_0; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_41 = io_data_out_ready ? _GEN_29 : data_queue_valid_1; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_42 = io_data_out_ready ? _GEN_30 : data_queue_valid_2; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_43 = io_data_out_ready ? _GEN_31 : data_queue_valid_3; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_44 = io_data_out_ready ? _GEN_32 : data_queue_valid_4; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_45 = io_data_out_ready ? _GEN_33 : data_queue_valid_5; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_46 = io_data_out_ready ? _GEN_34 : data_queue_valid_6; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_47 = io_data_out_ready ? _GEN_35 : data_queue_valid_7; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_48 = io_data_out_ready ? _GEN_36 : data_queue_valid_8; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_49 = io_data_out_ready ? _GEN_37 : data_queue_valid_9; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_50 = io_data_out_ready ? _GEN_38 : data_queue_valid_10; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_51 = io_data_out_ready ? _GEN_39 : data_queue_valid_11; // @[PkgDelay.scala 49:38 PkgDelay.scala 23:39]
+  wire  _GEN_54 = 4'h0 == cursor_tail[3:0] | _GEN_40; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_55 = 4'h1 == cursor_tail[3:0] | _GEN_41; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_56 = 4'h2 == cursor_tail[3:0] | _GEN_42; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_57 = 4'h3 == cursor_tail[3:0] | _GEN_43; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_58 = 4'h4 == cursor_tail[3:0] | _GEN_44; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_59 = 4'h5 == cursor_tail[3:0] | _GEN_45; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_60 = 4'h6 == cursor_tail[3:0] | _GEN_46; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_61 = 4'h7 == cursor_tail[3:0] | _GEN_47; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_62 = 4'h8 == cursor_tail[3:0] | _GEN_48; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_63 = 4'h9 == cursor_tail[3:0] | _GEN_49; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_64 = 4'ha == cursor_tail[3:0] | _GEN_50; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
+  wire  _GEN_65 = 4'hb == cursor_tail[3:0] | _GEN_51; // @[PkgDelay.scala 55:54 PkgDelay.scala 55:54]
   assign io_data_in_ready = io_data_out_ready; // @[PkgDelay.scala 17:25]
-  assign io_data_out_valid = 4'hb == cursor_head[3:0] ? data_queue_valid_11 : _GEN_14; // @[PkgDelay.scala 47:60 PkgDelay.scala 47:60]
-  assign io_data_out_bits_last = 1'h1; // @[PkgDelay.scala 49:30]
-  assign io_data_out_bits_data = 4'hb == cursor_head[3:0] ? data_queue_11 : _GEN_26; // @[PkgDelay.scala 48:30 PkgDelay.scala 48:30]
-  assign io_data_out_bits_keep = 64'hffffffffffffffff; // @[PkgDelay.scala 50:30]
+  assign io_data_out_valid = 4'hb == cursor_head[3:0] ? data_queue_valid_11 : _GEN_14; // @[PkgDelay.scala 45:60 PkgDelay.scala 45:60]
+  assign io_data_out_bits_last = 1'h1; // @[PkgDelay.scala 47:30]
+  assign io_data_out_bits_data = 4'hb == cursor_head[3:0] ? data_queue_11 : _GEN_26; // @[PkgDelay.scala 46:30 PkgDelay.scala 46:30]
+  assign io_data_out_bits_keep = 64'hffffffffffffffff; // @[PkgDelay.scala 48:30]
   always @(posedge clock) begin
     if (reset) begin // @[PkgDelay.scala 20:34]
       cursor_head <= 32'h0; // @[PkgDelay.scala 20:34]
-    end else if (io_data_out_ready) begin // @[PkgDelay.scala 51:38]
-      cursor_head <= _cursor_head_T_2; // @[PkgDelay.scala 53:28]
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      cursor_head <= _cursor_head_T_2; // @[PkgDelay.scala 51:28]
     end
     if (reset) begin // @[PkgDelay.scala 21:34]
       cursor_tail <= _cursor_tail_T_1; // @[PkgDelay.scala 21:34]
-    end else if (io_data_out_ready) begin // @[PkgDelay.scala 51:38]
-      cursor_tail <= _cursor_tail_T_4; // @[PkgDelay.scala 54:28]
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      cursor_tail <= _cursor_tail_T_4; // @[PkgDelay.scala 52:28]
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_0 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h0 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_0 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h0 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_0 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_1 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h1 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_1 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h1 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_1 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_2 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h2 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_2 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h2 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_2 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_3 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h3 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_3 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h3 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_3 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_4 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h4 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_4 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h4 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_4 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_5 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h5 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_5 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h5 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_5 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_6 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h6 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_6 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h6 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_6 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_7 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h7 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_7 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h7 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_7 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_8 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h8 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_8 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h8 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_8 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_9 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'h9 == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_9 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'h9 == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_9 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_10 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'ha == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_10 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'ha == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_10 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 22:33]
       data_queue_11 <= 512'h0; // @[PkgDelay.scala 22:33]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      if (4'hb == cursor_tail[3:0]) begin // @[PkgDelay.scala 58:48]
-        data_queue_11 <= data_cache; // @[PkgDelay.scala 58:48]
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      if (4'hb == cursor_tail[3:0]) begin // @[PkgDelay.scala 56:48]
+        data_queue_11 <= io_data_in_bits_data; // @[PkgDelay.scala 56:48]
       end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_0 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_0 <= _GEN_30;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_0 <= _GEN_54;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h0 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_0 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_1 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_1 <= _GEN_31;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_1 <= _GEN_55;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h1 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_1 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_2 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_2 <= _GEN_32;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_2 <= _GEN_56;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h2 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_2 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_3 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_3 <= _GEN_33;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_3 <= _GEN_57;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h3 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_3 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_4 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_4 <= _GEN_34;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_4 <= _GEN_58;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h4 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_4 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_5 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_5 <= _GEN_35;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_5 <= _GEN_59;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h5 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_5 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_6 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_6 <= _GEN_36;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_6 <= _GEN_60;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h6 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_6 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_7 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_7 <= _GEN_37;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_7 <= _GEN_61;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h7 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_7 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_8 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_8 <= _GEN_38;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_8 <= _GEN_62;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h8 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_8 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_9 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_9 <= _GEN_39;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_9 <= _GEN_63;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'h9 == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_9 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_10 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_10 <= _GEN_40;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_10 <= _GEN_64;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'ha == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_10 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
     if (reset) begin // @[PkgDelay.scala 23:39]
       data_queue_valid_11 <= 1'h0; // @[PkgDelay.scala 23:39]
-    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 56:76]
-      data_queue_valid_11 <= _GEN_41;
+    end else if (_T & io_data_in_valid & io_data_in_ready) begin // @[PkgDelay.scala 54:76]
+      data_queue_valid_11 <= _GEN_65;
+    end else if (io_data_out_ready) begin // @[PkgDelay.scala 49:38]
+      if (4'hb == cursor_head[3:0]) begin // @[PkgDelay.scala 50:47]
+        data_queue_valid_11 <= 1'h0; // @[PkgDelay.scala 50:47]
+      end
     end
-    data_cache <= io_data_in_bits_data; // @[PkgDelay.scala 27:19]
-    if (reset) begin // @[PkgDelay.scala 30:28]
-      state <= 1'h0; // @[PkgDelay.scala 30:28]
+    if (reset) begin // @[PkgDelay.scala 28:28]
+      state <= 1'h0; // @[PkgDelay.scala 28:28]
     end else if (_T) begin // @[Conditional.scala 40:58]
       state <= _T_5;
     end else if (state) begin // @[Conditional.scala 39:67]
-      if (_T_3 & io_data_in_bits_last) begin // @[PkgDelay.scala 40:105]
-        state <= 1'h0; // @[PkgDelay.scala 41:38]
+      if (_T_3 & io_data_in_bits_last) begin // @[PkgDelay.scala 38:105]
+        state <= 1'h0; // @[PkgDelay.scala 39:38]
       end else begin
-        state <= 1'h1; // @[PkgDelay.scala 43:38]
+        state <= 1'h1; // @[PkgDelay.scala 41:38]
       end
     end
   end
@@ -375,10 +444,8 @@ initial begin
   data_queue_valid_10 = _RAND_24[0:0];
   _RAND_25 = {1{`RANDOM}};
   data_queue_valid_11 = _RAND_25[0:0];
-  _RAND_26 = {16{`RANDOM}};
-  data_cache = _RAND_26[511:0];
-  _RAND_27 = {1{`RANDOM}};
-  state = _RAND_27[0:0];
+  _RAND_26 = {1{`RANDOM}};
+  state = _RAND_26[0:0];
 `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
