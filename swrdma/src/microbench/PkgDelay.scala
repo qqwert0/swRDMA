@@ -19,15 +19,15 @@ class PkgDelay extends Module{
 	val cursor_len = io.delay_cycle +1.U
 	var cursor_head = RegInit(0.U(32.W))
 	var cursor_tail = RegInit(cursor_len - 1.U)
-	var data_queue = RegInit(VecInit(Seq.fill(5000)(0.U(512.W))))
-	var data_queue_valid = RegInit(VecInit(Seq.fill(5000)(0.U(1.W))))
+	var data_queue = RegInit(VecInit(Seq.fill(12)(0.U(512.W))))
+	var data_queue_valid = RegInit(VecInit(Seq.fill(12)(0.U(1.W))))
 	//RegInit(Vec(Seq.fill(n)(0.U(32.W))))
 
 	val s1 :: s2 :: Nil = Enum(2)
 	val state = RegInit(s1)
 	switch(state){
 		is(s1){
-			when(io.data_in.valid===1.U&&io.data_in.ready===1.U&&io.data_in.bits.last=/=1.U){
+			when(io.data_in.valid===1.U&&io.data_in.ready===1.U&&io.data_in.bits.last===0.U){
 					state:=s2
 				}.otherwise{
 				state:=s1
