@@ -27,12 +27,10 @@ class PkgDelay extends Module{
 	val state = RegInit(s1)
 	switch(state){
 		is(s1){
-			when(io.data_in.valid===1.U&&io.data_in.ready===1.U){
-				data_queue_valid(cursor_tail):=1.U(1.W)
-				data_queue(cursor_tail):=io.data_in.bits.data
-				when(io.data_in.bits.last=/=1.U){
+			when(io.data_in.valid===1.U&&io.data_in.ready===1.U&&io.data_in.bits.last=/=1.U){
 					state:=s2
-				}
+				}.otherwise{
+				state:=s1
 			}
 		}
 		is(s2){
@@ -51,5 +49,9 @@ class PkgDelay extends Module{
 		//data_queue_valid(cursor_head) := 0.U
 		cursor_head:=(cursor_head+1.U)%cursor_len
 		cursor_tail:=(cursor_tail+1.U)%cursor_len
+	}
+	when(state === s1 &&io.data_in.valid===1.U&&io.data_in.ready===1.U){
+			data_queue_valid(cursor_tail):=1.U(1.W)
+			data_queue(cursor_tail):=io.data_in.bits.data
 	}
 }
