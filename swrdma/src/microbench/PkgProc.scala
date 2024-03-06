@@ -4,7 +4,8 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import common._
-
+import common.axi._
+import chisel3.util.{switch, is}
 
 class PkgProc extends Module{
 	val io = IO(new Bundle{
@@ -12,7 +13,7 @@ class PkgProc extends Module{
     	val upload_length = Input(UInt(32.W)) 
 		val upload_vaddr  =  Input(UInt(64.W)) 
 		val idle_cycle	= Output(UInt(32.W))       
-		val q_time_out = Decoupled(new UInt(512.W))
+		val q_time_out = Decoupled(UInt(512.W))
 	})
 	
 	val count_50us = Reg(UInt(32.W))
@@ -23,7 +24,7 @@ class PkgProc extends Module{
 	var reg_idle_cycle = RegInit(1.U(32.W))
 
 	var enqueue = Reg(UInt(32.W))
-	enqueue := io.data_in.bits.data&"h000000000000ffff".U(512.W)  //todo figure out enqueue's position
+	enqueue := io.data_in.bits.data(489,458)
 	switch(state1){
 		is(s_wait){
 			when(count_50us === count_50us_max){
@@ -67,7 +68,7 @@ class PkgProc extends Module{
 	}
 
 	
-	io.data_in.ready := state2 === s1 || (state1 === s_2 && io.q_time_out.ready === 1.U)
+	io.data_in.ready := state2 === s1 || (state1 === s2 && io.q_time_out.ready === 1.U)
 	io.q_time_out.bits := io.data_in.bits.data
 
 }
