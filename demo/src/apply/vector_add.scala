@@ -9,7 +9,7 @@ import chisel3.util.{switch, is}
 
 class vector_add extends Module{
 	val io = IO(new Bundle{
-		val infor_in	= Decoupled(new infor_input) 
+		val infor_in	= Flipped(Decoupled(new infor_input) )
 		val mem_interface = new AXI(33, 256, 6, 0, 4)
 		val infor_out   = Decoupled(UInt(1.W))
 	})
@@ -18,7 +18,7 @@ class vector_add extends Module{
 	val s_waiting :: s_computing :: s_computing_done :: Nil = Enum(3)
 
 	val state1 = RegInit(s_waiting)
-	var done = UInt(1.W)
+	var done = Wire(UInt(1.W))
 
 	switch(state1){
 		is(s_waiting){
@@ -39,17 +39,17 @@ class vector_add extends Module{
 	}
 	
 	when(state1 === s_waiting){
-		infor_in.ready := 1.U
+		io.infor_in.ready := 1.U
 	}.otherwise{
-		infor_in.ready := 0.U
+		io.infor_in.ready := 0.U
 	}
 
 	when(state1 === s_computing_done){
-		infor_out.valid := 1.U
-		infor_out.bits := 1.U
+		io.infor_out.valid := 1.U
+		io.infor_out.bits := 1.U
 	}.otherwise{
-		infor_out.valid := 0.U
-		infor_out.bits := 0.U
+		io.infor_out.valid := 0.U
+		io.infor_out.bits := 0.U
 	}
 
 	//* state machine 2: computing
@@ -74,14 +74,18 @@ class vector_add extends Module{
 			}
 		}
 		is(s4){
-			when(sate1 === s_computing_done ){
+			when(state1 === s_computing_done ){
 				state2:=s1
 			}
 		}
 	}
 
-	done := sate2 === s4
-
+	
+	when(state2 === s4){
+		done := 1.U
+	}.otherwise{
+		done := 0.U
+	}
 
 
 	
@@ -111,34 +115,36 @@ class vector_add extends Module{
 		io.mem_interface.r.ready := 0.U
 	}
 
-	io.mem_interface.ar.bits.addr := io.infor_in.bits.addr_read
+	val len = Wire(UInt(32.W))
+	len := io.infor_in.bits.len_read
+	io.mem_interface.ar.bits.addr := len >>5.U -1.U    //todo : need to be checked
 	io.mem_interface.ar.bits.burst := 1.U
-	//io.mem_interface.ar.bits.cache := 0.U
+	io.mem_interface.ar.bits.cache := 0.U
 	io.mem_interface.ar.bits.id := 0.U
-	io.mem_interface.ar.bits.len := (io.infor_in.bits.len/32.U -1.U)(4.W)
-	//io.mem_interface.ar.bits.lock := 0.U
+	io.mem_interface.ar.bits.len := io.infor_in.bits.len_read //>> 5.U -1.U
+	io.mem_interface.ar.bits.lock := 0.U
 	io.mem_interface.ar.bits.size := 5.U
-	//io.mem_interface.ar.bits.prot := 0.U
-	//io.mem_interface.ar.bits.qos := 0.U
-	//io.mem_interface.ar.bits.region := 0.U
-	//io.mem_interface.ar.bits.user := 0.U
+	io.mem_interface.ar.bits.prot := 0.U
+	io.mem_interface.ar.bits.qos := 0.U
+	io.mem_interface.ar.bits.region := 0.U
+	io.mem_interface.ar.bits.user := 0.U
 
 	io.mem_interface.aw.bits.addr := io.infor_in.bits.addr_write
 	io.mem_interface.aw.bits.burst := 1.U
-	//io.mem_interface.aw.bits.cache := 0.U
+	io.mem_interface.aw.bits.cache := 0.U
 	io.mem_interface.aw.bits.id := 0.U
 	io.mem_interface.aw.bits.len := 0.U
-	//io.mem_interface.aw.bits.lock := 0.U
+	io.mem_interface.aw.bits.lock := 0.U
 	io.mem_interface.aw.bits.size := 5.U
-	//io.mem_interface.aw.bits.prot := 0.U
-	//io.mem_interface.aw.bits.qos := 0.U
-	//io.mem_interface.aw.bits.region := 0.U
-	//io.mem_interface.aw.bits.user := 0.U
+	io.mem_interface.aw.bits.prot := 0.U
+	io.mem_interface.aw.bits.qos := 0.U
+	io.mem_interface.aw.bits.region := 0.U
+	io.mem_interface.aw.bits.user := 0.U
 
 	io.mem_interface.w.bits.data := result
 	io.mem_interface.w.bits.strb := "hffffffff".U(32.W)
 	io.mem_interface.w.bits.last := 1.U
-	//io.mem_interface.w.bits.user := 0.U
+	io.mem_interface.w.bits.user := 0.U
 	
 	val vec_entry = RegInit(VecInit(Seq.fill(8)(0.U(32.W))))
 	result := Cat(vec_entry(7),vec_entry(6),vec_entry(5),vec_entry(4),vec_entry(3),vec_entry(2),vec_entry(1),vec_entry(0))
@@ -164,4 +170,5 @@ class vector_add extends Module{
 		vec_entry(7) := 0.U(32.W)
 	}
 
+	
 }
