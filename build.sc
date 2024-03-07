@@ -98,3 +98,14 @@ object swrdma extends ScalaModule{
 	def moduleDeps = Seq(common)
 	def mainClass = Some("swrdma.elaborate")
 }
+
+object demo extends ScalaModule{
+	override def scalaVersion = "2.12.13"
+	override def scalacOptions = Setting.scalacOptions
+	override def scalacPluginIvyDeps = Setting.scalacPluginIvyDeps
+	override def ivyDeps = Agg(
+		ivy"edu.berkeley.cs::chisel3:3.4.4",
+	)
+	def moduleDeps = Seq(common)
+	def mainClass = Some("demo.elaborate")
+}
