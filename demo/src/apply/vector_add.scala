@@ -53,9 +53,9 @@ class vector_add extends Module{
 	}
 
 	//* state machine 2: computing
-	val s1 :: s2 :: s3 :: s4 :: Nil = Enum(4)
+	val s1 :: s2 :: s3 :: s4  :: Nil = Enum(4)
 	val state2 = RegInit(s1)
-	val result = RegInit(0.U(512.W))
+	val result = Wire(UInt(256.W))
 
 	switch(state2){
 		is(s1){
@@ -149,7 +149,7 @@ class vector_add extends Module{
 	val vec_entry = RegInit(VecInit(Seq.fill(8)(0.U(32.W))))
 	result := Cat(vec_entry(7),vec_entry(6),vec_entry(5),vec_entry(4),vec_entry(3),vec_entry(2),vec_entry(1),vec_entry(0))
 
-	when(state2 === s2 && io.mem_interface.r.fire() ){
+	when((state2 === s2 )&& io.mem_interface.r.fire() ){
 		vec_entry(0) := vec_entry(0)+io.mem_interface.r.bits.data(31,0)
 		vec_entry(1) := vec_entry(1)+io.mem_interface.r.bits.data(63,32)
 		vec_entry(2) := vec_entry(2)+io.mem_interface.r.bits.data(95,64)
