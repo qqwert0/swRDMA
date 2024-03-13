@@ -23,7 +23,7 @@ object elaborate extends App {
 		case "PkgDelay" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PkgDelay()),dir))
 		case "PkgProc" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PkgProc()),dir))
 		case "microbenchmark_recv" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new microbenchmark_recv()),dir))
-		case "microbenchmark_sender" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new microbenchmark_recv()),dir))
+		case "microbenchmark_sender" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new microbenchmark_sender()),dir))
 		case _ => println("Module match failed!")
 	}
 }

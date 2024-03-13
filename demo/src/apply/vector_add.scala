@@ -3,8 +3,6 @@ package demo
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
-import common._
-import common.axi._
 import chisel3.util.{switch, is}
 
 class vector_add extends Module{
@@ -17,8 +15,7 @@ class vector_add extends Module{
 		val args_len 	= Input(UInt(32.W))
 		val data_len 	= Input(UInt(32.W))
 		val ap_return 	= Output(UInt(32.W))
-		val mem_interface = new AXI(64, 256, 0, 0, 8)
-		/* 
+		 
 		val m_axi_gmem_AWADDR    = Output(UInt(64.W))
         val m_axi_gmem_AWLEN     = Output(UInt(8.W))
         val m_axi_gmem_AWSIZE    = Output(UInt(3.W))
@@ -54,13 +51,13 @@ class vector_add extends Module{
         val m_axi_gmem_RLAST     = Input(UInt(1.W))
         val m_axi_gmem_RVALID    = Input(UInt(1.W))
         val m_axi_gmem_RREADY    = Output(UInt(1.W))
-		 */
+		 
 	})
 
 	val startreg1 = RegInit(1.U(1.W))
 	io.ap_return := 0.U
 	startreg1 := io.start
-	//* state machine 1: total control
+	//state machine 1: total control
 	val s_waiting :: s_computing :: s_computing_done :: Nil = Enum(3)
 
 	val state1 = RegInit(s_waiting)
@@ -90,24 +87,24 @@ class vector_add extends Module{
 
 	
 
-	//* state machine 2: computing
+	// state machine 2: computing
 	val s1 :: s2 :: s3 :: s4  :: Nil = Enum(4)
 	val state2 = RegInit(s1)
 	val result = Wire(UInt(256.W))
 
 	switch(state2){
 		is(s1){
-			when(state1 === s_computing && io.mem_interface.ar.fire()){
+			when(state1 === s_computing && io.m_axi_gmem_ARVALID === 1.U && io.m_axi_gmem_RREADY === 1.U){ 
 				state2:=s2
 			}
 		}
 		is(s2){
-			when(io.mem_interface.r.fire() && io.mem_interface.r.bits.last === 1.U){
+			when(io. m_axi_gmem_RVALID === 1.U && io. m_axi_gmem_RREADY  === 1.U && io.m_axi_gmem_RLAST === 1.U){
 				state2:=s3
 			}
 		}
 		is(s3){
-			when(io.mem_interface.aw.fire() && io.mem_interface.w.fire() ){
+			when(io.m_axi_gmem_AWREADY === 1.U && io.m_axi_gmem_AWVALID === 1.U && io.m_axi_gmem_WVALID === 1.U && io.m_axi_gmem_WREADY === 1.U){
 				state2:=s4
 			}
 		}
@@ -128,74 +125,69 @@ class vector_add extends Module{
 
 	
 	when(state2 === s1){
-		io.mem_interface.aw.valid := 0.U
-		io.mem_interface.w.valid := 0.U
-		io.mem_interface.b.ready := 1.U
-		io.mem_interface.ar.valid := state1 === s_computing 
-		io.mem_interface.r.ready := 0.U
+		io.m_axi_gmem_AWVALID := 0.U
+		io.m_axi_gmem_WVALID := 0.U
+		io.m_axi_gmem_BREADY := 1.U
+		io.m_axi_gmem_ARVALID := state1 === s_computing 
+		io.m_axi_gmem_RREADY := 0.U
 	}.elsewhen(state2 === s2){
-		io.mem_interface.aw.valid := 0.U
-		io.mem_interface.w.valid := 0.U
-		io.mem_interface.b.ready := 1.U
-		io.mem_interface.ar.valid := 0.U
-		io.mem_interface.r.ready := 1.U
+		io.m_axi_gmem_AWVALID := 0.U
+		io.m_axi_gmem_WVALID := 0.U
+		io.m_axi_gmem_BREADY := 1.U
+		io.m_axi_gmem_ARVALID := 0.U
+		io.m_axi_gmem_RREADY := 1.U
 	}.elsewhen(state2 === s3){
-		io.mem_interface.aw.valid := 1.U
-		io.mem_interface.w.valid := 1.U
-		io.mem_interface.b.ready := 1.U
-		io.mem_interface.ar.valid := 0.U
-		io.mem_interface.r.ready := 0.U
+		io.m_axi_gmem_AWVALID := 1.U
+		io.m_axi_gmem_WVALID := 1.U
+		io.m_axi_gmem_BREADY := 1.U
+		io.m_axi_gmem_ARVALID := 0.U
+		io.m_axi_gmem_RREADY := 0.U
 	}.otherwise{
-		io.mem_interface.aw.valid := 0.U
-		io.mem_interface.w.valid := 0.U
-		io.mem_interface.b.ready := 1.U
-		io.mem_interface.ar.valid := 0.U
-		io.mem_interface.r.ready := 0.U
+		io.m_axi_gmem_AWVALID := 0.U
+		io.m_axi_gmem_WVALID := 0.U
+		io.m_axi_gmem_BREADY := 1.U
+		io.m_axi_gmem_ARVALID := 0.U
+		io.m_axi_gmem_RREADY := 0.U
 	}
 
 	val len = Wire(UInt(32.W))
 	len := io.args_len
-	io.mem_interface.ar.bits.addr := io.pargs    //todo : length need to be checked
-	io.mem_interface.ar.bits.burst := 1.U
-	io.mem_interface.ar.bits.cache := 0.U
-	io.mem_interface.ar.bits.id := 0.U
-	io.mem_interface.ar.bits.len := len >>5.U -1.U 
-	io.mem_interface.ar.bits.lock := 0.U
-	io.mem_interface.ar.bits.size := 5.U
-	io.mem_interface.ar.bits.prot := 0.U
-	io.mem_interface.ar.bits.qos := 0.U
-	io.mem_interface.ar.bits.region := 0.U
-	io.mem_interface.ar.bits.user := 0.U
+	io.m_axi_gmem_ARADDR := io.pargs    //todo : length need to be checked
+	io.m_axi_gmem_ARBURST := 1.U
+	io.m_axi_gmem_ARCACHE := 0.U
+	io.m_axi_gmem_ARLEN  := (len >>5.U) -1.U 
+	io.m_axi_gmem_ARLOCK := 0.U
+	io.m_axi_gmem_ARSIZE := 5.U
+	io.m_axi_gmem_ARPROT := 0.U
+	io.m_axi_gmem_ARQOS := 0.U
+	io.m_axi_gmem_ARREGION := 0.U
 
-	io.mem_interface.aw.bits.addr := io.pres
-	io.mem_interface.aw.bits.burst := 1.U
-	io.mem_interface.aw.bits.cache := 0.U
-	io.mem_interface.aw.bits.id := 0.U
-	io.mem_interface.aw.bits.len := 0.U
-	io.mem_interface.aw.bits.lock := 0.U
-	io.mem_interface.aw.bits.size := 5.U
-	io.mem_interface.aw.bits.prot := 0.U
-	io.mem_interface.aw.bits.qos := 0.U
-	io.mem_interface.aw.bits.region := 0.U
-	io.mem_interface.aw.bits.user := 0.U
+	io.m_axi_gmem_AWADDR := io.pres
+	io.m_axi_gmem_AWBURST := 1.U
+	io.m_axi_gmem_AWCACHE := 0.U
+	io.m_axi_gmem_AWLEN := 0.U
+	io.m_axi_gmem_AWLOCK := 0.U
+	io.m_axi_gmem_AWSIZE := 5.U
+	io.m_axi_gmem_AWPROT := 0.U
+	io.m_axi_gmem_AWQOS := 0.U
+	io.m_axi_gmem_AWREGION := 0.U
 
-	io.mem_interface.w.bits.data := result
-	io.mem_interface.w.bits.strb := "hffffffff".U(32.W)
-	io.mem_interface.w.bits.last := 1.U
-	io.mem_interface.w.bits.user := 0.U
+	io.m_axi_gmem_WDATA  := result
+	io.m_axi_gmem_WSTRB := "hffffffff".U(32.W)
+	io.m_axi_gmem_WLAST  := 1.U
 	
 	val vec_entry = RegInit(VecInit(Seq.fill(8)(0.U(32.W))))
 	result := Cat(vec_entry(7),vec_entry(6),vec_entry(5),vec_entry(4),vec_entry(3),vec_entry(2),vec_entry(1),vec_entry(0))
 
-	when((state2 === s2 )&& io.mem_interface.r.fire() ){
-		vec_entry(0) := vec_entry(0)+io.mem_interface.r.bits.data(31,0)
-		vec_entry(1) := vec_entry(1)+io.mem_interface.r.bits.data(63,32)
-		vec_entry(2) := vec_entry(2)+io.mem_interface.r.bits.data(95,64)
-		vec_entry(3) := vec_entry(3)+io.mem_interface.r.bits.data(127,96)
-		vec_entry(4) := vec_entry(4)+io.mem_interface.r.bits.data(159,128)
-		vec_entry(5) := vec_entry(5)+io.mem_interface.r.bits.data(191,160)
-		vec_entry(6) := vec_entry(6)+io.mem_interface.r.bits.data(223,192)
-		vec_entry(7) := vec_entry(7)+io.mem_interface.r.bits.data(255,224)
+	when((state2 === s2 )&& io.m_axi_gmem_RREADY === 1.U && io.m_axi_gmem_RVALID === 1.U){
+		vec_entry(0) := vec_entry(0)+io.m_axi_gmem_RDATA(31,0)
+		vec_entry(1) := vec_entry(1)+io.m_axi_gmem_RDATA(63,32)
+		vec_entry(2) := vec_entry(2)+io.m_axi_gmem_RDATA(95,64)
+		vec_entry(3) := vec_entry(3)+io.m_axi_gmem_RDATA(127,96)
+		vec_entry(4) := vec_entry(4)+io.m_axi_gmem_RDATA(159,128)
+		vec_entry(5) := vec_entry(5)+io.m_axi_gmem_RDATA(191,160)
+		vec_entry(6) := vec_entry(6)+io.m_axi_gmem_RDATA(223,192)
+		vec_entry(7) := vec_entry(7)+io.m_axi_gmem_RDATA(255,224)
 	}
 	when(state2 === s1){
 		vec_entry(0) := 0.U(32.W)
@@ -210,3 +202,4 @@ class vector_add extends Module{
 
 	
 }
+

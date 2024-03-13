@@ -15,7 +15,7 @@ class PkgDelay extends Module{
 		val data_out	= Decoupled(new AXIS(512)) 
 	})
 
-	val cursor_len = io.delay_cycle 
+	val cursor_len = RegNext(io.delay_cycle) 
 
 	val packFifo    = XQueue(UInt(512.W),300)
 	io.data_in.ready:= packFifo.io.in.ready  //io.data_out.ready
@@ -57,7 +57,12 @@ class PkgDelay extends Module{
 	packFifo.io.in.bits:=Cat(1.U(32.W),(io.data_in.bits.data(479,0)).asUInt)
 	packtpFifo.io.in.bits := timestamp
 
-	timestamp:=(timestamp+1.U)%cursor_len
+	//timestamp:=(timestamp+1.U)%cursor_len
+	when(timestamp === cursor_len - 1.U){
+		timestamp:=0.U
+	}.otherwise{
+		timestamp:=timestamp+1.U
+	}
 
 	val k1 :: k2 :: k3 :: Nil = Enum(3)
 	val state2 = RegInit(k1)

@@ -37,11 +37,15 @@ class microbenchmark_sender() extends RawModule{
 	val user_clk = BUFG(mmcm.io.CLKOUT0)
 	val user_rstn = mmcm.io.LOCKED
 	
+	val DataWriterInst = withClockAndReset(user_clk, ~user_rstn.asBool){Module(new MemoryDataWriter())}
+	val CallbackWriterInst = withClockAndReset(user_clk, ~user_rstn.asBool){Module(new MemoryCallbackWriter())}
+
+	CallbackWriterInst.io.callback <> DataWriterInst.io.callback
 
     val qdma = Module(new QDMA(
 		VIVADO_VERSION	="202101",
         PCIE_WIDTH			= 16,
-		SLAVE_BRIDGE		= false,
+		SLAVE_BRIDGE		= true,
 		BRIDGE_BAR_SCALE	= "Megabytes",
 		BRIDGE_BAR_SIZE 	= 4
 	))
@@ -53,9 +57,10 @@ class microbenchmark_sender() extends RawModule{
 	qdma.io.user_arstn	:= user_rstn
     qdma.io.h2c_cmd <>DontCare
 	qdma.io.h2c_data <>DontCare
-	qdma.io.c2h_cmd <> DontCare
-	qdma.io.c2h_data <>DontCare
+	qdma.io.c2h_cmd <> DataWriterInst.io.c2hCmd
+	qdma.io.c2h_data <>DataWriterInst.io.c2hData
     qdma.io.axib <> DontCare
+	qdma.io.s_axib.get  <> CallbackWriterInst.io.sAxib
 	
 	val status_reg = qdma.io.reg_status
 	Collector.connect_to_status_reg(status_reg, 400)
@@ -84,12 +89,29 @@ class microbenchmark_sender() extends RawModule{
     cmacInst2.io.net_clk <> DontCare
     cmacInst2.io.net_rstn <> DontCare
 
-    val PkgDelayInst = withClockAndReset(user_clk, ~user_clk.asBool){Module(new PkgDelay())}
     
-	//! cmacInst1.io.m_net_rx
-	//! cmacInst1.io.s_net_tx
-	//! cmacInst2.io.m_net_rx
-	//! cmacInst2.io.s_net_tx
+
+
+	val PkgProcInst = withClockAndReset(user_clk, ~user_rstn.asBool){Module(new PkgProc())}
+	val PkgGenInst1 = withClockAndReset(user_clk, ~user_rstn.asBool){Module(new PkgGen())}
+	val PkgGenInst2 = withClockAndReset(user_clk, ~user_rstn.asBool){Module(new PkgGen())}
+
+	DataWriterInst.io.cpuReq  <> PkgProcInst.io.c2h_req
+	DataWriterInst.io.memData <> PkgProcInst.io.q_time_out
+	
+	PkgProcInst.io.upload_length := control_reg(211)
+	PkgProcInst.io.upload_vaddr := control_reg(212)
+	PkgGenInst1.io.idle_cycle := PkgProcInst.io.idle_cycle
+	PkgGenInst2.io.idle_cycle := PkgProcInst.io.idle_cycle
+	PkgGenInst1.io.start := control_reg(213)
+	PkgGenInst2.io.start := control_reg(214)
+	
+
+		
+	cmacInst1.io.m_net_rx <> PkgProcInst.io.data_in
+	cmacInst1.io.s_net_tx <> PkgGenInst1.io.data_out
+	cmacInst2.io.m_net_rx <> DontCare
+	cmacInst2.io.s_net_tx <> PkgGenInst2.io.data_out	
 
     
 }

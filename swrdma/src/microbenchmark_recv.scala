@@ -74,7 +74,7 @@ class microbenchmark_recv() extends RawModule{
     cmacInst.io.net_clk <> DontCare
     cmacInst.io.net_rstn <> DontCare
 
-    val PkgDelayInst = withClockAndReset(user_clk, ~user_clk.asBool){Module(new PkgDelay())}
+    val PkgDelayInst = withClockAndReset(user_clk, ~user_rstn.asBool){Module(new PkgDelay())}
     PkgDelayInst.io.delay_cycle :=   control_reg(211)        //todo need to be modified
 	PkgDelayInst.io.data_in	    <>  cmacInst.io.m_net_rx
 	PkgDelayInst.io.data_out    <>  cmacInst.io.s_net_tx
