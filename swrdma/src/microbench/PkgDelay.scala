@@ -5,6 +5,7 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import common._
 import common.axi._
+import common.storage._
 import chisel3.util.{switch, is}
 
 class PkgDelay extends Module{
@@ -14,15 +15,16 @@ class PkgDelay extends Module{
 		val data_out	= Decoupled(new AXIS(512)) 
 	})
 
-	io.data_in.ready:=io.data_out.ready
+	val cursor_len = io.delay_cycle 
 
-	val cursor_len = io.delay_cycle +1.U
-	var cursor_head = RegInit(0.U(32.W))
-	var cursor_tail = RegInit(cursor_len - 1.U)
-	var data_queue = RegInit(VecInit(Seq.fill(5000)(0.U(512.W))))
-	var data_queue_valid = RegInit(VecInit(Seq.fill(5000)(0.U(1.W))))
-
-
+	val packFifo    = XQueue(UInt(512.W),300)
+	io.data_in.ready:= packFifo.io.in.ready  //io.data_out.ready
+	val packtpFifo    = XQueue(UInt(32.W),300)
+	val timestamp    = RegInit(0.U(32.W))
+    val packFiforeg = RegInit(0.U(512.W))
+	val packtpFiforeg = RegInit(0.U(32.W))
+	val packFifo_empty = RegInit(0.U(32.W))
+	packFifo_empty :=  packFifo.io.out.valid === 0.U 
 
 	val s1 :: s2 :: Nil = Enum(2)
 	val state = RegInit(s1)
@@ -42,17 +44,70 @@ class PkgDelay extends Module{
 			}
 		}
 	}
-	io.data_out.valid := data_queue_valid(cursor_head) === 1.U
-	io.data_out.bits.data:=data_queue(cursor_head)
+	
 	io.data_out.bits.last:=1.U
 	io.data_out.bits.keep:= "hffffffffffffffff".U(64.W)
-	when(io.data_out.ready===1.U){
-		data_queue_valid(cursor_head) := 0.U
-		cursor_head:=(cursor_head+1.U)%cursor_len
-		cursor_tail:=(cursor_tail+1.U)%cursor_len
+
+
+
+	packFifo.io.in.valid:=state === s1 &&io.data_in.valid===1.U
+	packtpFifo.io.in.valid:=state === s1 &&io.data_in.valid===1.U
+
+
+	packFifo.io.in.bits:=Cat(1.U(32.W),(io.data_in.bits.data(479,0)).asUInt)
+	packtpFifo.io.in.bits := timestamp
+
+	timestamp:=(timestamp+1.U)%cursor_len
+
+	val k1 :: k2 :: k3 :: Nil = Enum(3)
+	val state2 = RegInit(k1)
+	switch(state2){
+		is(k1){
+			when(packFifo.io.out.fire()&&packtpFifo.io.out.fire()){
+				state2:=k2
+			}.otherwise{
+				state2:=k1
+			}
+		}
+		is(k2){
+			when(timestamp === packtpFiforeg ){
+				state2:=k3
+			}.otherwise{
+				state2:=k2
+			}
+		}
+		is(k3){
+			when(io.data_out.ready===1.U&&io.data_out.valid===1.U){
+				state2:=k1
+			}.otherwise{
+				state2:=k3
+			}
+		}
 	}
-	when(state === s1 &&io.data_in.valid===1.U&&io.data_in.ready===1.U){
-			data_queue_valid(cursor_tail):=1.U(1.W)
-			data_queue(cursor_tail):=io.data_in.bits.data
+
+	when(state2 === k3){
+		io.data_out.valid :=  1.U
+		io.data_out.bits.data:=packFiforeg
+	}.otherwise{
+		io.data_out.valid :=  0.U
+		io.data_out.bits.data:=0.U
 	}
+
+
+	when(state2 === k1){
+		packFifo.io.out.ready:=1.U
+		packtpFifo.io.out.ready := 1.U
+	}.elsewhen(state2 === k2){
+		packFiforeg:=packFifo.io.out.bits
+		packtpFiforeg:=packtpFifo.io.out.bits
+		packFifo.io.out.ready:=0.U
+		packtpFifo.io.out.ready := 0.U
+	}.elsewhen(state2 === k3){
+		packFifo.io.out.ready:=0.U
+		packtpFifo.io.out.ready := 0.U
+	}.otherwise{
+		packFifo.io.out.ready:=0.U
+		packtpFifo.io.out.ready := 0.U
+	}
+
 }

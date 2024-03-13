@@ -64,3 +64,9 @@ class AETH_Header()extends Bundle{
     val credit = UInt(13.W)
 }
 
+class PacketRequest extends Bundle {
+    val addr     = Output(UInt(64.W))
+    val size     = Output(UInt(64.W))
+    val callback = Output(UInt(64.W))
+}
+

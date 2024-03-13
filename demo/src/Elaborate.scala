@@ -14,7 +14,7 @@ object elaborate extends App {
 	args(0) match{
 		case "Foo" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new Foo()),dir))
 		case "vector_add" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new vector_add()),dir))
-		case "demo_top" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new demo_top()),dir))
+		//case "demo_top" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new demo_top()),dir))
 		case _ => println("Module match failed!")
 	}
 }

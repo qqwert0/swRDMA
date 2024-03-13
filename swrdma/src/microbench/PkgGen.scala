@@ -56,8 +56,8 @@ class PkgGen extends Module{
 
 	switch(state){
 		is(fsm_idle){
-			when(io.start===1.U&&idle_cnt===io.idle_cycle){
-				state:=fsm_write0
+			when(io.start===1.U&&idle_cnt===io.idle_cycle-16.U){
+				state:=fsm_write0	
 			}.elsewhen(io.start===1.U){
 				state:=fsm_idle
 			}
