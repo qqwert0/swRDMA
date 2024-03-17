@@ -24,6 +24,7 @@ object elaborate extends App {
 		case "PkgProc" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PkgProc()),dir))
 		case "microbenchmark_recv" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new microbenchmark_recv()),dir))
 		case "microbenchmark_sender" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new microbenchmark_sender()),dir))
+		case "sender_reconfigable" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new sender_reconfigable()),dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
 		case _ => println("Module match failed!")
 	}
 }

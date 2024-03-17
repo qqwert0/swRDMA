@@ -17,8 +17,8 @@ class PkgProc extends Module{
 		val c2h_req      = Decoupled(new PacketRequest)
 	})
 	
-	io.c2h_req.bits.addr := io.upload_vaddr
-	io.c2h_req.bits.size := io.upload_length
+	io.c2h_req.bits.addr := RegNext(	io.upload_vaddr)
+	io.c2h_req.bits.size := RegNext(io.upload_length)	
 	io.c2h_req.bits.callback := 0.U(64.W)
 
 	val count_50us = Reg(UInt(32.W))
@@ -83,4 +83,12 @@ class PkgProc extends Module{
 	io.data_in.ready := state2 === s1 || state2 === s3  || (state2 === s2 && io.q_time_out.ready === 1.U)
 	io.q_time_out.bits := io.data_in.bits.data
 	io.q_time_out.valid := io.data_in.fire() && state2 === s2
+
+	class ila_proc(seq:Seq[Data]) extends BaseILA(seq)	  
+  	val proc = Module(new ila_proc(Seq(	
+		state1,
+		state2
+  	)))
+  	proc.connect(clock)
+
 }

@@ -12,7 +12,6 @@ import ddr._
 
 class microbenchmark_recv() extends RawModule{
     
-    val qdma_pin		= IO(new QDMAPin())
 	val led 			= IO(Output(UInt(1.W)))
 	val sys_100M_0_p	= IO(Input(Clock()))
   	val sys_100M_0_n	= IO(Input(Clock()))
@@ -37,28 +36,7 @@ class microbenchmark_recv() extends RawModule{
 	val user_rstn = mmcm.io.LOCKED
 	
 
-    val qdma = Module(new QDMA(
-		VIVADO_VERSION	="202101",
-        PCIE_WIDTH			= 16,
-		SLAVE_BRIDGE		= false,
-		BRIDGE_BAR_SCALE	= "Megabytes",
-		BRIDGE_BAR_SIZE 	= 4
-	))
-	qdma.getTCL()
 
-	ToZero(qdma.io.reg_status)
-	qdma.io.pin <> qdma_pin
-	qdma.io.user_clk	:= user_clk
-	qdma.io.user_arstn	:= user_rstn
-    qdma.io.h2c_cmd <>DontCare
-	qdma.io.h2c_data <>DontCare
-	qdma.io.c2h_cmd <> DontCare
-	qdma.io.c2h_data <>DontCare
-    qdma.io.axib <> DontCare
-	
-	val status_reg = qdma.io.reg_status
-	Collector.connect_to_status_reg(status_reg, 400)
-	val control_reg = qdma.io.reg_control
 
 
     val cmacInst = Module(new XCMAC(BOARD="u280", PORT=0, IP_CORE_NAME="CMACBlackBoxBase"))
@@ -75,8 +53,21 @@ class microbenchmark_recv() extends RawModule{
     cmacInst.io.net_rstn <> DontCare
 
     val PkgDelayInst = withClockAndReset(user_clk, ~user_rstn.asBool){Module(new PkgDelay())}
-    PkgDelayInst.io.delay_cycle :=   control_reg(211)        //todo need to be modified
+    //PkgDelayInst.io.delay_cycle :=   control_reg(211)        //todo need to be modified
 	PkgDelayInst.io.data_in	    <>  cmacInst.io.m_net_rx
 	PkgDelayInst.io.data_out    <>  cmacInst.io.s_net_tx
+
+	class ila_tx(seq:Seq[Data]) extends BaseILA(seq)	  
+  	val tx = Module(new ila_tx(Seq(	
+		cmacInst.io.m_net_rx,
+		cmacInst.io.s_net_tx
+  	)))
+  	tx.connect(user_clk)
+
+	class vio_nx(seq:Seq[Data]) extends BaseVIO(seq)	  
+  	val nx = Module(new vio_nx(Seq(	
+		PkgDelayInst.io.delay_cycle
+  	)))
+  	nx.connect(user_clk)
 
 }

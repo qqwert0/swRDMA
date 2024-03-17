@@ -5,6 +5,7 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import common._
 import common.axi._
+//import common.Util._
 import chisel3.util.{switch, is}
 
 
@@ -19,12 +20,12 @@ class PkgGen extends Module{
 	// 包大小固定为1024B，包括一个12B报头
 
 	
-	class User_Header()extends Bundle{
-    	val des_port  = UInt(32.W)
+	class User_Header()extends Bundle{    	
     	val enqueue   = UInt(32.W)
     	val entime    = UInt(32.W)
     	val dequeue   = UInt(32.W)
-    	val detime    = UInt(32.W)	    
+    	val detime    = UInt(32.W)
+		val des_port  = UInt(32.W)	    
 	}
 
 	val header_queue = 0.U(32.W)
@@ -32,14 +33,14 @@ class PkgGen extends Module{
 	val des_port = 0.U(32.W)
 	
 	val header = Wire(new User_Header)
-	header.des_port:=3.U(32.W)
+	header.des_port:="h03000000".U(32.W) //Util.reverse(3.U(32.W))
 	header.enqueue:=0.U(32.W)
 	header.entime:=0.U(32.W)
 	header.dequeue:=0.U(32.W)
 	header.detime:=0.U(32.W)
 
 	val content =Wire(Vec(16,UInt(512.W)))
-	content(0):=Cat(header.asUInt,0.U(352.W))
+	content(0):=Cat(0.U(352.W),header.asUInt)
 	for (contentid <- 1 until 16) {
 		content(contentid):=0.U(512.W)
     }
@@ -132,5 +133,12 @@ class PkgGen extends Module{
 	}.otherwise{
 		io.data_out.bits.last:=0.U
 	}
+
+
+	class ila_gen(seq:Seq[Data]) extends BaseILA(seq)	  
+  	val gen = Module(new ila_gen(Seq(	
+		state
+  	)))
+  	gen.connect(clock)
 
 }

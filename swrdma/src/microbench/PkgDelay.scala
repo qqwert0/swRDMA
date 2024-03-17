@@ -54,7 +54,7 @@ class PkgDelay extends Module{
 	packtpFifo.io.in.valid:=state === s1 &&io.data_in.valid===1.U
 
 
-	packFifo.io.in.bits:=Cat(1.U(32.W),(io.data_in.bits.data(479,0)).asUInt)
+	packFifo.io.in.bits:=Cat((io.data_in.bits.data(511,32)).asUInt,"h01000000".U(32.W))
 	packtpFifo.io.in.bits := timestamp
 
 	//timestamp:=(timestamp+1.U)%cursor_len
@@ -114,5 +114,12 @@ class PkgDelay extends Module{
 		packFifo.io.out.ready:=0.U
 		packtpFifo.io.out.ready := 0.U
 	}
+
+	class ila_delay(seq:Seq[Data]) extends BaseILA(seq)	  
+  	val delay = Module(new ila_delay(Seq(	
+		state,
+		state2
+  	)))
+  	delay.connect(clock)
 
 }
