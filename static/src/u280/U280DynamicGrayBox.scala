@@ -3,7 +3,6 @@ package static.u280
 import chisel3._
 import chisel3.util._
 import cmac._
-import qdma._
 import common._
 import common.storage._
 import common.axi._

@@ -11,7 +11,7 @@ import common._
 class User_Header()extends Bundle{
     val queue   = UInt(32.W)
     val time    = UInt(32.W)
-    val des_port = = UInt(32.W)
+    val des_port = UInt(32.W)
 }
 
 
@@ -62,5 +62,11 @@ class AETH_Header()extends Bundle{
     val iswr_ack = UInt(1.W)
 	val isNAK = UInt(2.W)
     val credit = UInt(13.W)
+}
+
+class PacketRequest extends Bundle {
+    val addr     = Output(UInt(64.W))
+    val size     = Output(UInt(64.W))
+    val callback = Output(UInt(64.W))
 }
 
