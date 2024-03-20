@@ -118,7 +118,15 @@ class PkgDelay extends Module{
 	class ila_delay(seq:Seq[Data]) extends BaseILA(seq)	  
   	val delay = Module(new ila_delay(Seq(	
 		state,
-		state2
+		state2,
+		packtpFiforeg,
+		packFiforeg,
+		timestamp,
+		io.data_in,
+		io.data_out,
+		io.delay_cycle,
+		packFifo.io.in,
+		packFifo.io.out
   	)))
   	delay.connect(clock)
 
