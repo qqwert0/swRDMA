@@ -153,9 +153,6 @@ class sender_reconfigable extends MultiIOModule {
 		PkgGenInst2.io.start := RegNext(control_reg(214))
 	}
 	
-
-		//withClockAndReset(user_clk, ~user_rstn.asBool){RegSlice(3)(
-	//cmacInst.io.m_net_rx <> withClockAndReset(user_clk, ~user_rstn.asBool){RegSlice(3)(PkgProcInst.io.data_in)}
 	PkgProcInst.io.data_in <> withClockAndReset(userClk, ~userRstn.asBool){RegSlice(3)(cmacInst.io.m_net_rx)}
 	cmacInst.io.s_net_tx <> PkgGenInst1.io.data_out
 	cmacInst2.io.m_net_rx <> DontCare
@@ -180,12 +177,12 @@ class sender_reconfigable extends MultiIOModule {
 		cmacInst.io.m_net_rx.valid,
 		cmacInst.io.m_net_rx.ready,
 		cmacInst.io.m_net_rx.bits.last,
-		txdata,
+		// txdata,
 		cmacInst.io.s_net_tx.valid,
 		cmacInst.io.s_net_tx.ready,
 		cmacInst.io.s_net_tx.bits.last,
 		rxdata,
-		PkgProcInst.io.idle_cycle
+		// PkgProcInst.io.idle_cycle
   	)))
   	ila_net.connect(userClk)
 }

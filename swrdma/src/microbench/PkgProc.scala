@@ -27,7 +27,7 @@ class PkgProc extends Module{
 	val count_50us_max = 50000.U(32.W)
 
 	val s_init :: s_wait :: s_judge :: Nil = Enum(3)
-	val state1 = RegInit(s_wait)
+	val state1 = RegInit(s_init)
 	val queue_len = RegNext(io.queue_len)
 	var reg_idle_cycle = RegInit(20.U(32.W))
 	io.idle_cycle := reg_idle_cycle
@@ -93,11 +93,17 @@ class PkgProc extends Module{
 	io.q_time_out.bits := io.data_in.bits.data
 	io.q_time_out.valid := io.data_in.fire() && state2 === s2
 
-	class ila_proc(seq:Seq[Data]) extends BaseILA(seq)	  
-  	val proc = Module(new ila_proc(Seq(	
-		state1,
-		state2
-  	)))
-  	proc.connect(clock)
+	// class ila_proc(seq:Seq[Data]) extends BaseILA(seq)	  
+  	// val proc = Module(new ila_proc(Seq(	
+	// 	state1,
+	// 	state2,
+	// 	enqueue,
+	// 	queue_len,
+	// 	io.data_in.valid,
+	// 	io.data_in.ready,
+	// 	reg_idle_cycle
+
+  	// )))
+  	// proc.connect(clock)
 
 }
