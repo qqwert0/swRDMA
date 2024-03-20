@@ -145,6 +145,8 @@ class sender_reconfigable extends MultiIOModule {
 
 		PkgProcInst.io.upload_length := RegNext(control_reg(210))
 		PkgProcInst.io.upload_vaddr := Cat(control_reg(212),control_reg(211))
+		PkgProcInst.io.queue_len	:= RegNext(control_reg(215))
+		PkgProcInst.io.init_idle_cycle	:= RegNext(control_reg(216))
 		PkgGenInst1.io.idle_cycle := RegNext(PkgProcInst.io.idle_cycle)
 		PkgGenInst2.io.idle_cycle := RegNext(PkgProcInst.io.idle_cycle)
 		PkgGenInst1.io.start := RegNext(control_reg(213))

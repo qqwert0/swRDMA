@@ -135,10 +135,10 @@ class PkgGen extends Module{
 	}
 
 
-	class ila_gen(seq:Seq[Data]) extends BaseILA(seq)	  
-  	val gen = Module(new ila_gen(Seq(	
-		state
-  	)))
-  	gen.connect(clock)
+	// class ila_gen(seq:Seq[Data]) extends BaseILA(seq)	  
+  	// val gen = Module(new ila_gen(Seq(	
+	// 	state
+  	// )))
+  	// gen.connect(clock)
 
 }

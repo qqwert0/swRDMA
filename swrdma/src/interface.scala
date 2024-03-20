@@ -5,7 +5,19 @@ import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import common._
 
+object Util{
+    def reverse(data:UInt)={
+        val width = data.getWidth
+        val res =  WireInit(VecInit(Seq.fill(width)(0.U(1.W))))
 
+        for(i<-0 until width/8){
+            for(j<-0 until 8){
+                res(i*8+j) := data(width-(i*8)+j-8)
+            }
+        }
+        res.asUInt()
+    }
+}
 
 
 class User_Header()extends Bundle{

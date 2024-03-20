@@ -12,7 +12,9 @@ class PkgProc extends Module{
 		val data_in	= Flipped(Decoupled(new AXIS(512))) 
     	val upload_length = Input(UInt(32.W)) 
 		val upload_vaddr  =  Input(UInt(64.W)) 
-		val idle_cycle	= Output(UInt(32.W))       
+		val queue_len	= Input(UInt(32.W))  
+		val init_idle_cycle	= Input(UInt(32.W))     
+		val idle_cycle	= Output(UInt(32.W)) 
 		val q_time_out = Decoupled(UInt(512.W))
 		val c2h_req      = Decoupled(new PacketRequest)
 	})
@@ -24,21 +26,28 @@ class PkgProc extends Module{
 	val count_50us = Reg(UInt(32.W))
 	val count_50us_max = 50000.U(32.W)
 
-	val s_wait :: s_judge :: Nil = Enum(2)
+	val s_init :: s_wait :: s_judge :: Nil = Enum(3)
 	val state1 = RegInit(s_wait)
+	val queue_len = RegNext(io.queue_len)
 	var reg_idle_cycle = RegInit(20.U(32.W))
 	io.idle_cycle := reg_idle_cycle
 
 	var enqueue = Wire(UInt(32.W))
-	enqueue := io.data_in.bits.data(479,448)
+	enqueue := Util.reverse(io.data_in.bits.data(127,96))
 	switch(state1){
+		is(s_init){
+			reg_idle_cycle	:= io.init_idle_cycle
+			when(io.data_in.fire()){
+				state1:=s_judge
+			}
+		}		
 		is(s_wait){
 			when(count_50us === count_50us_max){
 				state1:=s_judge
 			}
 		}
 		is(s_judge){
-			when(io.data_in.valid === 1.U&&io.data_in.ready === 1.U&& (enqueue > 10.U)){	
+			when(io.data_in.fire()&& (enqueue > queue_len)){	
 				reg_idle_cycle := reg_idle_cycle * 2.U
 				state1:=s_wait
 			}
@@ -57,7 +66,7 @@ class PkgProc extends Module{
 
 	switch(state2){
 		is(s1){
-			when(io.data_in.valid === 1.U&&io.data_in.ready === 1.U&&(enqueue > 10.U)){
+			when(io.data_in.valid === 1.U&&io.data_in.ready === 1.U&&(enqueue > queue_len)){
 				state2:=s3
 			}
 		}
