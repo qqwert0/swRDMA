@@ -10,20 +10,21 @@ import common.partialReconfig.AlveoStaticIO
 import qdma._
 import cmac._
 import ddr._
+import hbm._
 
 class sender_reconfigable extends MultiIOModule {
 	override val desiredName = "AlveoDynamicTop"
     val io = IO(Flipped(new AlveoStaticIO(
         VIVADO_VERSION = "202101", 
 		QDMA_PCIE_WIDTH = 16, 
-		QDMA_SLAVE_BRIDGE = false, 
+		QDMA_SLAVE_BRIDGE = true, 
 		QDMA_AXI_BRIDGE = true,
 		ENABLE_CMAC_1 = true,
 		ENABLE_CMAC_2 = true,
-		ENABLE_DDR_2=true
+		ENABLE_DDR_2=false
     )))
 
-	val dbgBridgeInst = DebugBridge(IP_CORE_NAME="DebugBridgeBase", clk=clock)
+	val dbgBridgeInst = DebugBridge(IP_CORE_NAME="DebugBridge", clk=clock)
 	dbgBridgeInst.getTCL()
 
 	dontTouch(io)
@@ -33,36 +34,54 @@ class sender_reconfigable extends MultiIOModule {
 	val userClk  	= Wire(Clock())
 	val userRstn 	= Wire(Bool())
     
-	userClk		:= clock
-	userRstn	:= ~reset.asBool
 
-	val qdma = Module(new QDMADynamic(
+
+	val qdmaInst = Module(new QDMADynamic(
 		VIVADO_VERSION		= "202101",
 		PCIE_WIDTH			= 16,
-		SLAVE_BRIDGE		= false,
+		SLAVE_BRIDGE		= true,
 		BRIDGE_BAR_SCALE	= "Megabytes",
 		BRIDGE_BAR_SIZE 	= 4
 	))
 
-    //qdma.io.s_axib.get  <> DontCare
+    // qdma.io.s_axib.get  <> DontCare
 
-	ToZero(qdma.io.reg_status)
 
-    qdma.io.qdma_port	<> io.qdma
-	qdma.io.user_clk	:= userClk
-	qdma.io.user_arstn	:= ((~reset.asBool & ~qdma.io.reg_control(0)(0)).asClock).asBool
 
-	qdma.io.h2c_cmd <>DontCare
-	qdma.io.h2c_data <>DontCare
+	// ToZero(qdmaInst.io.reg_status)
 
-	qdma.io.axib <> DontCare
+    qdmaInst.io.qdma_port	<> io.qdma
+	qdmaInst.io.user_clk	:= userClk
+	qdmaInst.io.user_arstn	:= ~reset.asBool 
+
+    // Init values
+    qdmaInst.io.axib.ar.ready	:= 1.U
+    qdmaInst.io.axib.aw.ready	:= 1.U
+    qdmaInst.io.axib.w.ready	:= 1.U
+    qdmaInst.io.axib.r.valid	:= 1.U
+    ToZero(qdmaInst.io.axib.r.bits)
+    qdmaInst.io.axib.b.valid	:= 1.U
+    ToZero(qdmaInst.io.axib.b.bits)
+
+
+	qdmaInst.io.h2c_data.ready	:= 0.U
+	qdmaInst.io.c2h_data.valid	:= 0.U
+	qdmaInst.io.c2h_data.bits	:= 0.U.asTypeOf(new C2H_DATA)
+
+	qdmaInst.io.h2c_cmd.valid	:= 0.U
+	qdmaInst.io.h2c_cmd.bits	:= 0.U.asTypeOf(new H2C_CMD)
+	qdmaInst.io.c2h_cmd.valid	:= 0.U
+	qdmaInst.io.c2h_cmd.bits	:= 0.U.asTypeOf(new C2H_CMD)
 	
 	
-	val status_reg = qdma.io.reg_status
+	
+	val status_reg = qdmaInst.io.reg_status
+	ToZero(status_reg)
 	Collector.connect_to_status_reg(status_reg, 400)
-	val control_reg = qdma.io.reg_control
+	val control_reg = qdmaInst.io.reg_control
 
- 
+ 	userClk		:= clock
+	userRstn	:= ((~reset.asBool & ~control_reg(0)(0)).asClock).asBool
 
     // not used cmac,but sould get it
 		
@@ -91,24 +110,29 @@ class sender_reconfigable extends MultiIOModule {
     // io.ddrPort2.get.axi<> DontCare
 
 	
-	val ddr_rst=Wire(Bool())
-    val ddr_clk=Wire(Clock())
+	// val ddr_rst=Wire(Bool())
+    // val ddr_clk=Wire(Clock())
 
-    ddr_clk:=io.ddrPort2.get.clk
-    ddr_rst:=io.ddrPort2.get.rst
-	io.ddrPort2.get.axi.qdma_init()
-	io.ddrPort2.get.axi <> DontCare
+    // ddr_clk:=io.ddrPort2.get.clk
+    // ddr_rst:=io.ddrPort2.get.rst
+	// io.ddrPort2.get.axi.qdma_init()
+	// io.ddrPort2.get.axi <> DontCare
 
 
 
 	val DataWriterInst = withClockAndReset(userClk, ~userRstn.asBool){Module(new MemoryDataWriter())}
 	val CallbackWriterInst = withClockAndReset(userClk, ~userRstn.asBool){Module(new MemoryCallbackWriter())}
 
-    qdma.io.c2h_cmd <> DataWriterInst.io.c2hCmd
-	qdma.io.c2h_data <>DataWriterInst.io.c2hData
+    withClockAndReset(userClk, ~userRstn.asBool) {
+        RegSlice(6)(DataWriterInst.io.c2hCmd)		<> qdmaInst.io.c2h_cmd
+        RegSlice(6)(DataWriterInst.io.c2hData)	    <> qdmaInst.io.c2h_data
+        AXIRegSlice(2)(CallbackWriterInst.io.sAxib)      <> qdmaInst.io.s_axib.get
+    }
+
 
 	CallbackWriterInst.io.callback <> DataWriterInst.io.callback
-    CallbackWriterInst.io.sAxib <> DontCare
+
+    
 
 	val PkgProcInst = withClockAndReset(userClk, ~userRstn.asBool){Module(new PkgProc())}
 	val PkgGenInst1 = withClockAndReset(userClk, ~userRstn.asBool){Module(new PkgGen())}
@@ -117,12 +141,15 @@ class sender_reconfigable extends MultiIOModule {
 	DataWriterInst.io.cpuReq  <> PkgProcInst.io.c2h_req
 	DataWriterInst.io.memData <> PkgProcInst.io.q_time_out
 	
-	PkgProcInst.io.upload_length := control_reg(210)
-	PkgProcInst.io.upload_vaddr := Cat(control_reg(212),control_reg(211))
-	PkgGenInst1.io.idle_cycle := PkgProcInst.io.idle_cycle
-	PkgGenInst2.io.idle_cycle := PkgProcInst.io.idle_cycle
-	PkgGenInst1.io.start := control_reg(213)
-	PkgGenInst2.io.start := control_reg(214)
+	withClockAndReset(userClk, ~userRstn.asBool) {
+
+		PkgProcInst.io.upload_length := RegNext(control_reg(210))
+		PkgProcInst.io.upload_vaddr := Cat(control_reg(212),control_reg(211))
+		PkgGenInst1.io.idle_cycle := RegNext(PkgProcInst.io.idle_cycle)
+		PkgGenInst2.io.idle_cycle := RegNext(PkgProcInst.io.idle_cycle)
+		PkgGenInst1.io.start := RegNext(control_reg(213))
+		PkgGenInst2.io.start := RegNext(control_reg(214))
+	}
 	
 
 		//withClockAndReset(user_clk, ~user_rstn.asBool){RegSlice(3)(
@@ -133,11 +160,29 @@ class sender_reconfigable extends MultiIOModule {
 	cmacInst2.io.s_net_tx <> PkgGenInst2.io.data_out
 	
 
+	val hbmDriver = withClockAndReset(io.sysClk, false.B) {Module(new HBM_DRIVER(WITH_RAMA=false, IP_CORE_NAME="HBMBlackBox"))}
+		hbmDriver.getTCL()
+
+		for (i <- 0 until 32) {
+			hbmDriver.io.axi_hbm(i).hbm_init()	// Read hbm_init function if you're not familiar with AXI.
+		}
+
+
+	val txdata = WireInit(0.U(160.W))
+	txdata	:= cmacInst.io.s_net_tx.bits.data(159,0)
+	val rxdata = WireInit(0.U(160.W))
+	rxdata	:= cmacInst.io.m_net_rx.bits.data(159,0)
 
 	class ila_net(seq:Seq[Data]) extends BaseILA(seq)	  
   	val ila_net = Module(new ila_net(Seq(	
-		cmacInst.io.m_net_rx,
-		cmacInst.io.s_net_tx,
+		cmacInst.io.m_net_rx.valid,
+		cmacInst.io.m_net_rx.ready,
+		cmacInst.io.m_net_rx.bits.last,
+		txdata,
+		cmacInst.io.s_net_tx.valid,
+		cmacInst.io.s_net_tx.ready,
+		cmacInst.io.s_net_tx.bits.last,
+		rxdata,
 		PkgProcInst.io.idle_cycle
   	)))
   	ila_net.connect(userClk)

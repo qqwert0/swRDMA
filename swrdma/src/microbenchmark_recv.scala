@@ -39,7 +39,7 @@ class microbenchmark_recv() extends RawModule{
 
 
 
-    val cmacInst = Module(new XCMAC(BOARD="u280", PORT=0, IP_CORE_NAME="CMACBlackBoxBase"))
+    val cmacInst = Module(new XCMAC(BOARD="u280", PORT=1, IP_CORE_NAME="CMACBlackBoxBase"))
 	cmacInst.getTCL()
 	// Connect CMAC's pins
 	cmacInst.io.pin			<> cmac_pin

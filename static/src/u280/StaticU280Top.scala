@@ -13,11 +13,11 @@ class StaticU280Top extends RawModule {
 
 	// Configure the parameters.
 
-	val USE_AXI_SLAVE_BRIDGE	= false		// Turn on this if you want to enable QDMA's Slave bridge.
+	val USE_AXI_SLAVE_BRIDGE	= true		// Turn on this if you want to enable QDMA's Slave bridge.
 	val ENABLE_CMAC_1			= true		// Turn on this if you want to enable CMAC at QSFP0
 	val ENABLE_CMAC_2			= true		// Turn on this if you want to enable CMAC at QSFP1
 	val ENABLE_DDR_1			= false		// Turn on this if you want to enable DDR at Channel 0
-	val ENABLE_DDR_2			= true		// Turn on this if you want to enable DDR at Channel 1
+	val ENABLE_DDR_2			= false		// Turn on this if you want to enable DDR at Channel 1
 
 	// I/O ports.
 

@@ -95,7 +95,7 @@ object swrdma extends ScalaModule{
 	override def ivyDeps = Agg(
 		ivy"edu.berkeley.cs::chisel3:3.4.4",
 	)
-	def moduleDeps = Seq(common,qdma,cmac,ddr)
+	def moduleDeps = Seq(common,qdma,cmac,hbm,ddr)
 	def mainClass = Some("swrdma.elaborate")
 }
 
