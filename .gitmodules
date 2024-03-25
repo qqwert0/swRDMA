@@ -13,3 +13,6 @@
 [submodule "ddr"]
 	path = ddr
 	url = git@github.com:rc4ml/ddr.git
+[submodule "network"]
+	path = network
+	url = git@github.com:qqwert0/network.git
