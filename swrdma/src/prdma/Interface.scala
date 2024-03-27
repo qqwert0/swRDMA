@@ -27,7 +27,8 @@ class Pkg_meta()extends Bundle{
 	val psn = UInt(24.W)
     val ecn = Bool()
     val vaddr = UInt(64.W)
-    val length = UInt(32.W)
+    val pkg_length = UInt(32.W)   //udp totol length - headers length
+    val msg_length = UInt(32.W)   //reth  DMA length
     val user_define = UInt(336.W)
 }
 

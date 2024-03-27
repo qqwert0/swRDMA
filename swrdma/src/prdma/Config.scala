@@ -41,6 +41,7 @@ object CONFIG{
     def IBH_HEADER_LEN = 96
     def RETH_HEADER_LEN = 128
     def AETH_HEADER_LEN = 32
+    def SWRDMA_HEADER_LEN = 32
     def INIT_CREDIT = 800
     def RX_BUFFER_FULL = 4000
     def ACK_CREDIT = 1000
