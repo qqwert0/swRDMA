@@ -15,6 +15,8 @@ class HeadAdd() extends Module{
 		val Conn_state	    = Flipped(Decoupled(new Conn_rsp()))
         val tx_data_out	   	= (Decoupled(new AXIS(512)))
 
+		val local_ip_address= Input(UInt(32.W))
+
 	})
 
 
