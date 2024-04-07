@@ -1,11 +1,10 @@
-package network.roce.table
+package swrdma
 
 import common.storage._
 import common._
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
-import network.roce.util._
 import common.Collector
 
 

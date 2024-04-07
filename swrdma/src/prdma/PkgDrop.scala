@@ -5,7 +5,6 @@ import common.axi._
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
-import network.roce.util._
 import common.Collector
 
 class PkgDrop() extends Module{

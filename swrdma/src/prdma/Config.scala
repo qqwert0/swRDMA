@@ -41,7 +41,11 @@ object CONFIG{
     def IBH_HEADER_LEN = 96
     def RETH_HEADER_LEN = 128
     def AETH_HEADER_LEN = 32
-    def SWRDMA_HEADER_LEN = 32
+    def SWRDMA_HEADER_LEN1 = 32
+    def SWRDMA_HEADER_LEN2 = 64
+    def SWRDMA_HEADER_LEN3 = 128
+    def SWRDMA_HEADER_LEN4 = 256
+    def SWRDMA_HEADER_LEN5 = 336
     def INIT_CREDIT = 800
     def RX_BUFFER_FULL = 4000
     def ACK_CREDIT = 1000
@@ -112,16 +116,27 @@ object  IB_OP_CODE extends ChiselEnum{
     val	RC_READ_RESP_MIDDLE = Value(0x0E.U)
     val	RC_READ_RESP_LAST = Value(0x0F.U)
     val	RC_READ_RESP_ONLY = Value(0x10.U)
-    val	RC_ACK = Value(0x11.U)
+    val	RC_ACK = Value(0x11.U)  
     val	CNP = Value(0x81.U)
+    val	CE = Value(0x82.U)
     val	reserve = Value(0xFF.U)
-
 }
 
 
 
 
+
+
 object  PKG_JUDGE{
+
+
+    // def OP_CODE_to_CC = Seq(IB_OP_CODE.RC_WRITE_FIRST, IB_OP_CODE.CNP)
+
+
+    // def CC_PKG(opcode:IB_OP_CODE.Type) = {
+    //     OP_CODE_to_CC.map(a === _).reduce(_ || _)
+    // }
+
 
     def RETH_PKG(opcode:IB_OP_CODE.Type) = {
         val result = Wire(new Bool())

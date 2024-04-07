@@ -26,9 +26,9 @@ class Pkg_meta()extends Bundle{
     val qpn = UInt(24.W)
 	val psn = UInt(24.W)
     val ecn = Bool()
-    val vaddr = UInt(64.W)
-    val pkg_length = UInt(32.W)   //udp totol length - headers length
-    val msg_length = UInt(32.W)   //reth  DMA length
+    val vaddr = UInt(64.W)         //RDMA message vaddr
+    val pkg_length = UInt(32.W)   //packet length (udp totol length - headers length)
+    val msg_length = UInt(32.W)   //RDMA message length 
     val user_define = UInt(336.W)
 }
 
@@ -39,15 +39,31 @@ class Drop_meta()extends Bundle{
 class CC_meta()extends Bundle{
     val op_code = IB_OP_CODE()
     val qpn = UInt(24.W)
-    val ecn = Bool()
+    val pkg_length = UInt(32.W)
     val user_define = UInt(336.W)
+    def cc_gen(cmd_i:IB_OP_CODE.Type, qpn_i:UInt, ecn_i:Bool, user_define_i:UInt)={
+        op_code     := cmd_i
+        qpn         := qpn_i
+        ecn         := ecn_i
+        user_define := user_define_i
+    }
 }
 
 class Dma_meta()extends Bundle{
     val op_code = IB_OP_CODE()
     val qpn = UInt(24.W)
     val vaddr = UInt(64.W)
-    val length = UInt(32.W)
+    val pkg_length = UInt(32.W)
+    val msg_length = UInt(32.W)
+    def dma_gen(cmd_i:IB_OP_CODE.Type, qpn_i:UInt, vaddr_i:UInt, pkg_length_i:UInt, msg_length_i:UInt)={
+        op_code     := cmd_i
+        qpn         := qpn_i
+        vaddr       := vaddr_i
+        pkg_length  := pkg_length_i
+        msg_length  := msg_length_i
+    }
+
+
 }
 
 
@@ -56,9 +72,62 @@ class Event_meta()extends Bundle{
     val qpn = UInt(24.W)
 	val psn = UInt(24.W)
     val ecn = Bool()
-    val vaddr = UInt(64.W)
-    val length = UInt(32.W)
+    val l_vaddr = UInt(64.W)    //local vaddr
+    val r_vaddr = UInt(64.W)    //remote vaddr
+    val msg_length = UInt(32.W)  
+    val header_len = UInt(4.W)  //0:0B, 1:4B, 2:8B, 3:16B, 4:32B, 5:42B
     val user_define = UInt(336.W)
+    def event_gen(cmd_i:IB_OP_CODE.Type, qpn_i:UInt, psn_i:UInt, ecn_i:Bool, vaddr_i:UInt, msg_length_i:UInt, msg_length_i:UInt, user_define_i:UInt)={
+        op_code     := cmd_i
+        qpn         := qpn_i
+        psn         := psn_i
+        ecn         := ecn_i
+        l_vaddr     := vaddr_i
+        r_vaddr     := vaddr_i
+        msg_length  := msg_length_i
+        header_len  := header_len_i
+        user_define := user_define_i
+    }
+    def ack_gen(qpn_i:UInt, psn_i:UInt, user_define_i:UInt)={
+        op_code     := IB_OP_CODE.RC_ACK
+        qpn         := qpn_i
+        psn         := psn_i
+        ecn         := false.B
+        l_vaddr     := 0.U
+        r_vaddr     := 0.U
+        msg_length  := 0.U
+        header_len  := 0.U
+        user_define := user_define_i
+    }
+    def ecn_gen(qpn_i:UInt, user_define_i:UInt)={
+        op_code     := IB_OP_CODE.CNP
+        qpn         := qpn_i
+        psn         := 0.U
+        ecn         := true.B
+        l_vaddr     := 0.U
+        r_vaddr     := 0.U
+        msg_length  := 0.U
+        header_len  := 0.U
+        user_define := user_define_i
+    }
+    def remote_event(cmd_i:IB_OP_CODE.Type, qpn_i:UInt, psn_i:UInt, r_vaddr_i:UInt, length_i:UInt)={
+        op_code     := cmd_i
+        qpn         := qpn_i
+        psn         := psn_i
+        ecn         := false.B
+        l_vaddr     := 0.U
+        r_vaddr     := r_vaddr_i
+        length      := length_i
+    }
+    def local_event(cmd_i:IB_OP_CODE.Type, qpn_i:UInt, l_vaddr_i:UInt, vaddr_i:UInt, length_i:UInt)={
+        op_code     := cmd_i
+        qpn         := qpn_i
+        psn         := 0.U
+        ecn         := false.B
+        l_vaddr     := l_vaddr_i
+        r_vaddr     := vaddr_i
+        length      := length_i
+    }
 }
 
 
@@ -125,7 +194,7 @@ class Conn_init()extends Bundle{
 class Conn_req()extends Bundle{
     val qpn             = UInt(24.W)
     val is_wr           = Bool()
-    val conn_state      = CONN_STATE()
+    val conn_state      = CONN_STATE()   
 }
 
 class Conn_rsp()extends Bundle{
@@ -140,8 +209,23 @@ class Conn_state()extends Bundle{
 	val rx_epsn         = UInt(24.W)   
     val tx_npsn         = UInt(24.W)
     val rx_old_unack    = UInt(24.W)
+    def conn_gen(remote_qpn_i:UInt, remote_ip_i:UInt, remote_udp_port_i:UInt, rx_epsn_i:Bool, tx_npsn_i:UInt, rx_old_unack_i:UInt)={
+        remote_qpn          := remote_qpn_i
+        remote_ip           := remote_ip_i
+        remote_udp_port     := remote_udp_port_i
+        rx_epsn             := rx_epsn_i
+        tx_npsn             := tx_npsn_i
+        rx_old_unack        := rx_old_unack_i
+    }
 }
 
 
 
 //
+
+class CC_state()extends Bundle{
+    val credit          = UInt(32.W)  
+    val rate            = UInt(32.W)  
+    val timer           = UInt(32.W)  //上次发送数据时的时间，用于计算数据包是否能否发送
+	val userdefine      = UInt(336.W)   
+}
