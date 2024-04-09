@@ -1,6 +1,7 @@
 package swrdma
 
 import common.storage._
+import common._
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
@@ -10,7 +11,7 @@ import common.Collector
 class VaddrTable() extends Module{
 	val io = IO(new Bundle{
 		val rx2vaddr_req  	= Flipped(Decoupled(new Vaddr_req()))
-		val vaddr2rx_rsp	    = (Decoupled(new Vaddr_rsp()))
+		val vaddr2rx_rsp	    = (Decoupled(new Vaddr_state()))
 	})
 
 
@@ -43,14 +44,14 @@ class VaddrTable() extends Module{
     switch(state){
         is(sIDLE){
             when(vaddr_rx_fifo.io.out.fire()){
-                conn_request                            := vaddr_rx_fifo.io.out.bits
+                vaddr_request                            := vaddr_rx_fifo.io.out.bits
                 when(vaddr_rx_fifo.io.out.bits.is_wr){
                     vaddr_table.io.addr_a                    := vaddr_rx_fifo.io.out.bits.qpn
                     vaddr_table.io.wr_en_a                   := 1.U
-                    vaddr_table.io.data_in_a                 := vaddr_rx_fifo.io.out.bits.vaddr_state
+                    vaddr_table.io.data_in_a                 := vaddr_rx_fifo.io.out.bits.msn_state
                     state                                   := sIDLE
                 }.otherwise{                
-                    conn_table.io.addr_b             := vaddr_rx_fifo.io.out.bits.qpn
+                    vaddr_table.io.addr_b             := vaddr_rx_fifo.io.out.bits.qpn
                     state                            := sRXRSP
                 }    
             }.otherwise{

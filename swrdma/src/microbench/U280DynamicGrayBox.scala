@@ -9,6 +9,7 @@ import common.axi._
 import hbm._
 import ddr._
 import static._
+import qdma._
 import common.partialReconfig.AlveoStaticIO
 
 // Module name must be AlveoDynamicTop

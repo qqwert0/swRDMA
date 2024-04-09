@@ -45,7 +45,7 @@ object CONFIG{
     def SWRDMA_HEADER_LEN2 = 64
     def SWRDMA_HEADER_LEN3 = 128
     def SWRDMA_HEADER_LEN4 = 256
-    def SWRDMA_HEADER_LEN5 = 336
+    def SWRDMA_HEADER_LEN5 = 352
     def INIT_CREDIT = 800
     def RX_BUFFER_FULL = 4000
     def ACK_CREDIT = 1000
@@ -99,11 +99,31 @@ class AETH_HEADER()extends Bundle{
 }
 
 class SWRDMA_HEADER()extends Bundle{
-    val user_define = UInt(336.W)
+    val user_define = UInt(352.W)
 }
 
 
-object  IB_OP_CODE extends ChiselEnum{
+object  IB_OPCODE extends ChiselEnum{
+    // val	reserve0 = Value(0x0.U)
+    // val	RC_WRITE_FIRST = Value(0x06.U)
+    // val	RC_WRITE_MIDDLE = Value(0x07.U)
+    // val	RC_WRITE_LAST = Value(0x08.U)
+    // val	RC_WRITE_LAST_WITH_IMD = Value(0x09.U)
+    // val	RC_WRITE_ONLY = Value(0x0A.U)
+    // val	RC_WRITE_ONLY_WIT_IMD = Value(0x0B.U)
+    // val	RC_READ_REQUEST = Value(0x0C.U)
+    // val	RC_READ_RESP_FIRST = Value(0x0D.U)
+    // val	RC_READ_RESP_MIDDLE = Value(0x0E.U)
+    // val	RC_READ_RESP_LAST = Value(0x0F.U)
+    // val	RC_READ_RESP_ONLY = Value(0x10.U)
+    // val	RC_ACK = Value(0x11.U) 
+    // val	RC_DIRECT_FIRST = Value(0x18.U)
+    // val	RC_DIRECT_MIDDLE = Value(0x19.U)
+    // val	RC_DIRECT_LAST = Value(0x1A.U)
+    // val	RC_DIRECT_ONLY = Value(0x1B.U)    
+    // val	CNP = Value(0x81.U)
+    // val	CE = Value(0x82.U)
+    // val	reserve = Value(0xFF.U)
     val	reserve0 = Value(0x0.U)
     val	RC_WRITE_FIRST = Value(0x06.U)
     val	RC_WRITE_MIDDLE = Value(0x07.U)
@@ -116,10 +136,13 @@ object  IB_OP_CODE extends ChiselEnum{
     val	RC_READ_RESP_MIDDLE = Value(0x0E.U)
     val	RC_READ_RESP_LAST = Value(0x0F.U)
     val	RC_READ_RESP_ONLY = Value(0x10.U)
-    val	RC_ACK = Value(0x11.U)  
-    val	CNP = Value(0x81.U)
-    val	CE = Value(0x82.U)
+    val	RC_ACK = Value(0x11.U)
+    val	RC_DIRECT_FIRST = Value(0x18.U)
+    val	RC_DIRECT_MIDDLE = Value(0x19.U)
+    val	RC_DIRECT_LAST = Value(0x1A.U)
+    val	RC_DIRECT_ONLY = Value(0x1B.U)
     val	reserve = Value(0xFF.U)
+
 }
 
 
@@ -129,18 +152,9 @@ object  IB_OP_CODE extends ChiselEnum{
 
 object  PKG_JUDGE{
 
-
-    // def OP_CODE_to_CC = Seq(IB_OP_CODE.RC_WRITE_FIRST, IB_OP_CODE.CNP)
-
-
-    // def CC_PKG(opcode:IB_OP_CODE.Type) = {
-    //     OP_CODE_to_CC.map(a === _).reduce(_ || _)
-    // }
-
-
-    def RETH_PKG(opcode:IB_OP_CODE.Type) = {
+    def RETH_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_WRITE_FIRST) | (opcode === IB_OP_CODE.RC_WRITE_ONLY) | (opcode === IB_OP_CODE.RC_READ_REQUEST) | (opcode === IB_OP_CODE.RC_DIRECT_FIRST) | (opcode === IB_OP_CODE.RC_DIRECT_ONLY)){
+        when((opcode === IB_OPCODE.RC_WRITE_FIRST) | (opcode === IB_OPCODE.RC_WRITE_ONLY) | (opcode === IB_OPCODE.RC_READ_REQUEST) | (opcode === IB_OPCODE.RC_DIRECT_FIRST) | (opcode === IB_OPCODE.RC_DIRECT_ONLY)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -148,9 +162,9 @@ object  PKG_JUDGE{
         result
     }
 
-    def AETH_PKG(opcode:IB_OP_CODE.Type) = {
+    def AETH_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_READ_RESP_FIRST) | (opcode === IB_OP_CODE.RC_READ_RESP_LAST) | (opcode === IB_OP_CODE.RC_READ_RESP_ONLY) | (opcode === IB_OP_CODE.RC_ACK)){
+        when((opcode === IB_OPCODE.RC_READ_RESP_FIRST) | (opcode === IB_OPCODE.RC_READ_RESP_LAST) | (opcode === IB_OPCODE.RC_READ_RESP_ONLY) | (opcode === IB_OPCODE.RC_ACK)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -161,10 +175,10 @@ object  PKG_JUDGE{
 
 
 
-    def READ_MEM_PKG(opcode:IB_OP_CODE.Type) = {
+    def READ_MEM_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_READ_RESP_FIRST) | (opcode === IB_OP_CODE.RC_READ_RESP_LAST) | (opcode === IB_OP_CODE.RC_READ_RESP_ONLY) | (opcode === IB_OP_CODE.RC_READ_RESP_MIDDLE) |
-            (opcode === IB_OP_CODE.RC_WRITE_FIRST) | (opcode === IB_OP_CODE.RC_WRITE_LAST) | (opcode === IB_OP_CODE.RC_WRITE_ONLY) | (opcode === IB_OP_CODE.RC_WRITE_MIDDLE)){
+        when((opcode === IB_OPCODE.RC_READ_RESP_FIRST) | (opcode === IB_OPCODE.RC_READ_RESP_LAST) | (opcode === IB_OPCODE.RC_READ_RESP_ONLY) | (opcode === IB_OPCODE.RC_READ_RESP_MIDDLE) |
+            (opcode === IB_OPCODE.RC_WRITE_FIRST) | (opcode === IB_OPCODE.RC_WRITE_LAST) | (opcode === IB_OPCODE.RC_WRITE_ONLY) | (opcode === IB_OPCODE.RC_WRITE_MIDDLE)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -172,11 +186,11 @@ object  PKG_JUDGE{
         result
     }     
 
-    def HAVE_DATA(opcode:IB_OP_CODE.Type) = {
+    def HAVE_DATA(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_READ_RESP_FIRST) | (opcode === IB_OP_CODE.RC_READ_RESP_LAST) | (opcode === IB_OP_CODE.RC_READ_RESP_ONLY) | (opcode === IB_OP_CODE.RC_READ_RESP_MIDDLE) |
-            (opcode === IB_OP_CODE.RC_WRITE_FIRST) | (opcode === IB_OP_CODE.RC_WRITE_LAST) | (opcode === IB_OP_CODE.RC_WRITE_ONLY) | (opcode === IB_OP_CODE.RC_WRITE_MIDDLE) |
-            (opcode === IB_OP_CODE.RC_DIRECT_FIRST) | (opcode === IB_OP_CODE.RC_DIRECT_LAST) | (opcode === IB_OP_CODE.RC_DIRECT_ONLY) | (opcode === IB_OP_CODE.RC_DIRECT_MIDDLE)){
+        when((opcode === IB_OPCODE.RC_READ_RESP_FIRST) | (opcode === IB_OPCODE.RC_READ_RESP_LAST) | (opcode === IB_OPCODE.RC_READ_RESP_ONLY) | (opcode === IB_OPCODE.RC_READ_RESP_MIDDLE) |
+            (opcode === IB_OPCODE.RC_WRITE_FIRST) | (opcode === IB_OPCODE.RC_WRITE_LAST) | (opcode === IB_OPCODE.RC_WRITE_ONLY) | (opcode === IB_OPCODE.RC_WRITE_MIDDLE) |
+            (opcode === IB_OPCODE.RC_DIRECT_FIRST) | (opcode === IB_OPCODE.RC_DIRECT_LAST) | (opcode === IB_OPCODE.RC_DIRECT_ONLY) | (opcode === IB_OPCODE.RC_DIRECT_MIDDLE)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -184,10 +198,10 @@ object  PKG_JUDGE{
         result
     } 
     
-def REQ_PKG(opcode:IB_OP_CODE.Type) = {
+def REQ_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_WRITE_FIRST) | (opcode === IB_OP_CODE.RC_WRITE_LAST) | (opcode === IB_OP_CODE.RC_WRITE_ONLY) | (opcode === IB_OP_CODE.RC_WRITE_MIDDLE) | (opcode === IB_OP_CODE.RC_READ_REQUEST) |
-        (opcode === IB_OP_CODE.RC_DIRECT_FIRST) | (opcode === IB_OP_CODE.RC_DIRECT_LAST) | (opcode === IB_OP_CODE.RC_DIRECT_ONLY) | (opcode === IB_OP_CODE.RC_DIRECT_MIDDLE)){
+        when((opcode === IB_OPCODE.RC_WRITE_FIRST) | (opcode === IB_OPCODE.RC_WRITE_LAST) | (opcode === IB_OPCODE.RC_WRITE_ONLY) | (opcode === IB_OPCODE.RC_WRITE_MIDDLE) | (opcode === IB_OPCODE.RC_READ_REQUEST) |
+        (opcode === IB_OPCODE.RC_DIRECT_FIRST) | (opcode === IB_OPCODE.RC_DIRECT_LAST) | (opcode === IB_OPCODE.RC_DIRECT_ONLY) | (opcode === IB_OPCODE.RC_DIRECT_MIDDLE)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -195,9 +209,9 @@ def REQ_PKG(opcode:IB_OP_CODE.Type) = {
         result
     } 
 
-    def READ_RSP_PKG(opcode:IB_OP_CODE.Type) = {
+    def READ_RSP_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_READ_RESP_FIRST) | (opcode === IB_OP_CODE.RC_READ_RESP_LAST) | (opcode === IB_OP_CODE.RC_READ_RESP_ONLY) | (opcode === IB_OP_CODE.RC_READ_RESP_MIDDLE)){
+        when((opcode === IB_OPCODE.RC_READ_RESP_FIRST) | (opcode === IB_OPCODE.RC_READ_RESP_LAST) | (opcode === IB_OPCODE.RC_READ_RESP_ONLY) | (opcode === IB_OPCODE.RC_READ_RESP_MIDDLE)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -205,10 +219,10 @@ def REQ_PKG(opcode:IB_OP_CODE.Type) = {
         result
     }  
     
-    def WRITE_PKG(opcode:IB_OP_CODE.Type) = {
+    def WRITE_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_WRITE_FIRST) | (opcode === IB_OP_CODE.RC_WRITE_LAST) | (opcode === IB_OP_CODE.RC_WRITE_ONLY) | (opcode === IB_OP_CODE.RC_WRITE_MIDDLE) |
-        (opcode === IB_OP_CODE.RC_DIRECT_FIRST) | (opcode === IB_OP_CODE.RC_DIRECT_LAST) | (opcode === IB_OP_CODE.RC_DIRECT_ONLY) | (opcode === IB_OP_CODE.RC_DIRECT_MIDDLE)){
+        when((opcode === IB_OPCODE.RC_WRITE_FIRST) | (opcode === IB_OPCODE.RC_WRITE_LAST) | (opcode === IB_OPCODE.RC_WRITE_ONLY) | (opcode === IB_OPCODE.RC_WRITE_MIDDLE) |
+        (opcode === IB_OPCODE.RC_DIRECT_FIRST) | (opcode === IB_OPCODE.RC_DIRECT_LAST) | (opcode === IB_OPCODE.RC_DIRECT_ONLY) | (opcode === IB_OPCODE.RC_DIRECT_MIDDLE)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -216,9 +230,9 @@ def REQ_PKG(opcode:IB_OP_CODE.Type) = {
         result
     }
 
-    def WR_MSG_NOT_LAST_PKG(opcode:IB_OP_CODE.Type) = {
+    def WR_MSG_NOT_LAST_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_WRITE_FIRST) | (opcode === IB_OP_CODE.RC_WRITE_MIDDLE) | (opcode === IB_OP_CODE.RC_DIRECT_FIRST) | (opcode === IB_OP_CODE.RC_DIRECT_MIDDLE)){
+        when((opcode === IB_OPCODE.RC_WRITE_FIRST) | (opcode === IB_OPCODE.RC_WRITE_MIDDLE) | (opcode === IB_OPCODE.RC_DIRECT_FIRST) | (opcode === IB_OPCODE.RC_DIRECT_MIDDLE)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -226,9 +240,9 @@ def REQ_PKG(opcode:IB_OP_CODE.Type) = {
         result
     } 
 
-    def WR_MSG_LAST_PKG(opcode:IB_OP_CODE.Type) = {
+    def WR_MSG_LAST_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_WRITE_LAST) | (opcode === IB_OP_CODE.RC_WRITE_ONLY) | (opcode === IB_OP_CODE.RC_DIRECT_LAST) | (opcode === IB_OP_CODE.RC_DIRECT_ONLY)){
+        when((opcode === IB_OPCODE.RC_WRITE_LAST) | (opcode === IB_OPCODE.RC_WRITE_ONLY) | (opcode === IB_OPCODE.RC_DIRECT_LAST) | (opcode === IB_OPCODE.RC_DIRECT_ONLY)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -236,18 +250,18 @@ def REQ_PKG(opcode:IB_OP_CODE.Type) = {
         result
     }      
 
-    def RD_MSG_FIRST_PKG(opcode:IB_OP_CODE.Type) = {
+    def RD_MSG_FIRST_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_READ_RESP_FIRST) | (opcode === IB_OP_CODE.RC_READ_RESP_ONLY)){
+        when((opcode === IB_OPCODE.RC_READ_RESP_FIRST) | (opcode === IB_OPCODE.RC_READ_RESP_ONLY)){
             result := true.B
         }.otherwise{
             result := false.B
         }
         result
     }     
-    def RD_MSG_LAST_PKG(opcode:IB_OP_CODE.Type) = {
+    def RD_MSG_LAST_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_READ_RESP_LAST) | (opcode === IB_OP_CODE.RC_READ_RESP_ONLY)){
+        when((opcode === IB_OPCODE.RC_READ_RESP_LAST) | (opcode === IB_OPCODE.RC_READ_RESP_ONLY)){
             result := true.B
         }.otherwise{
             result := false.B
@@ -255,10 +269,10 @@ def REQ_PKG(opcode:IB_OP_CODE.Type) = {
         result
     }  
 
-    def MSG_LAST_PKG(opcode:IB_OP_CODE.Type) = {
+    def MSG_LAST_PKG(opcode:IB_OPCODE.Type) = {
         val result = Wire(new Bool())
-        when((opcode === IB_OP_CODE.RC_WRITE_LAST) | (opcode === IB_OP_CODE.RC_WRITE_ONLY) | 
-        (opcode === IB_OP_CODE.RC_READ_RESP_LAST) | (opcode === IB_OP_CODE.RC_READ_RESP_ONLY) | (opcode === IB_OP_CODE.RC_READ_REQUEST)){
+        when((opcode === IB_OPCODE.RC_WRITE_LAST) | (opcode === IB_OPCODE.RC_WRITE_ONLY) | 
+        (opcode === IB_OPCODE.RC_READ_RESP_LAST) | (opcode === IB_OPCODE.RC_READ_RESP_ONLY) | (opcode === IB_OPCODE.RC_READ_REQUEST)){
             result := true.B
         }.otherwise{
             result := false.B
