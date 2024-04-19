@@ -68,6 +68,7 @@ class DataWriter() extends Module{
 		}
 		is(sDATA){
 			when(vaddr_fifo.io.out.fire() & ((~consume_read_addr) || (read_req_fifo.io.out.fire()&consume_read_addr))){
+				state										:= sIDLE
 				consume_read_addr							:= false.B
 				when(meta_reg.op_code === IB_OPCODE.RC_WRITE_FIRST){
 					io.vaddr_req.valid						:= 1.U

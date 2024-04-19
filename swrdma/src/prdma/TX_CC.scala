@@ -76,6 +76,7 @@ class TX_CC() extends Module{
                 io.cc_meta_out.bits.op_code     := IB_OPCODE.safe(csr.io.user_csr_rd(0)(7,0))._1
                 io.cc_meta_out.bits.qpn         := csr.io.user_csr_rd(1)
                 io.cc_meta_out.bits.pkg_length  := csr.io.user_csr_rd(2)
+                io.cc_meta_out.bits.header_len  := 1.U//fix it
                 io.cc_req.valid                 := 1.U
                 io.cc_req.bits.is_wr            := true.B
                 io.cc_req.bits.lock             := false.B

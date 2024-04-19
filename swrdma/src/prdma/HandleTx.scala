@@ -94,20 +94,20 @@ class HandleTx() extends Module{
                     io.local_read_addr.bits.q_index := app_fifo.io.out.bits.qpn
                     io.local_read_addr.bits.data    := app_fifo.io.out.bits.local_vaddr
                     io.event_meta_out.valid         := 1.U
-                    io.event_meta_out.bits.local_event(IB_OPCODE.RC_READ_REQUEST, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length)                  
+                    io.event_meta_out.bits.local_event(IB_OPCODE.RC_READ_REQUEST, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length, 0.U)                  
 				}.elsewhen(app_fifo.io.out.bits.rdma_cmd === APP_OP_CODE.APP_WRITE){
                     when(app_fifo.io.out.bits.length > CONFIG.MTU.U){
                         state	                    := sWRITE
                         laddr                       := app_fifo.io.out.bits.local_vaddr + CONFIG.MTU.U
                         raddr                       := app_fifo.io.out.bits.remote_vaddr + CONFIG.MTU.U
                         length                      := app_fifo.io.out.bits.length - CONFIG.MTU.U  
-                        io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_FIRST, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length)                       
+                        io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_FIRST, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length, CONFIG.MTU.U )                       
                     }.otherwise{
                         state	                    := sIDLE
                         laddr                       := app_fifo.io.out.bits.local_vaddr
                         raddr                       := app_fifo.io.out.bits.remote_vaddr
                         length                      := app_fifo.io.out.bits.length
-                        io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_ONLY, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length) 
+                        io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_ONLY, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length, app_fifo.io.out.bits.length) 
                     }
                     io.event_meta_out.valid         := 1.U
                 }
@@ -138,31 +138,31 @@ class HandleTx() extends Module{
                     laddr                       := laddr + CONFIG.MTU.U
                     raddr                       := raddr + CONFIG.MTU.U
                     length                      := length - CONFIG.MTU.U   
-                    io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_MIDDLE, app_meta.qpn, laddr, raddr, CONFIG.MTU.U)                     
+                    io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_MIDDLE, app_meta.qpn, laddr, raddr, length, CONFIG.MTU.U)                     
                 }.otherwise{
                     state	                    := sIDLE
                     laddr                       := 0.U
                     raddr                       := 0.U
                     length                      := 0.U
-                    io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_LAST, app_meta.qpn, laddr, raddr, length)
+                    io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_LAST, app_meta.qpn, laddr, raddr, length, length)
                 }
                 io.event_meta_out.valid         := 1.U  
 			}
 		}        
-		is(sSEND){
-			when(io.event_meta_out.ready){
-                when(length > CONFIG.MTU.U){
-                    state	                    := sSEND
-                    length                      := length - CONFIG.MTU.U   
-                    io.event_meta_out.bits.local_event(IB_OPCODE.RC_DIRECT_MIDDLE, app_meta.qpn, 0.U, 0.U, CONFIG.MTU.U)                     
-                }.otherwise{
-                    state	                    := sIDLE
-                    length                      := 0.U
-                    io.event_meta_out.bits.local_event(IB_OPCODE.RC_DIRECT_LAST, app_meta.qpn, 0.U, 0.U, length)
-                }
-                io.event_meta_out.valid         := 1.U  
-			}
-		} 
+		// is(sSEND){
+		// 	when(io.event_meta_out.ready){
+        //         when(length > CONFIG.MTU.U){
+        //             state	                    := sSEND
+        //             length                      := length - CONFIG.MTU.U   
+        //             io.event_meta_out.bits.local_event(IB_OPCODE.RC_DIRECT_MIDDLE, app_meta.qpn, 0.U, 0.U, CONFIG.MTU.U)                     
+        //         }.otherwise{
+        //             state	                    := sIDLE
+        //             length                      := 0.U
+        //             io.event_meta_out.bits.local_event(IB_OPCODE.RC_DIRECT_LAST, app_meta.qpn, 0.U, 0.U, length)
+        //         }
+        //         io.event_meta_out.valid         := 1.U  
+		// 	}
+		// } 
 	}
 
 

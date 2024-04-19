@@ -2,6 +2,7 @@ package swrdma
 
 import common.storage._
 import common.axi._
+import common._
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
@@ -46,6 +47,7 @@ class HeadProcess() extends Module{
 	rx_data_out_router.io.out(3) <> io.raw_data_out
 	
 	val meta_wire    = Wire(new Pkg_meta())
+    ToZero(meta_wire)
 	val s_head :: s_payload :: Nil = Enum(2)
 
 	val state = RegInit(s_head)
@@ -84,15 +86,15 @@ class HeadProcess() extends Module{
 
 	when(state === s_head ){  //todo need to be checked
 		when(PKG_JUDGE.RETH_PKG(meta_wire.op_code)){  
+            meta_wire.pkg_length  := Util.reverse(udp_header.length) -8.U-12.U-16.U
 			pack_class := reth_pack
 		}.elsewhen(PKG_JUDGE.AETH_PKG(meta_wire.op_code)){
+            meta_wire.pkg_length  := Util.reverse(udp_header.length) -8.U-12.U-4.U
 			pack_class := aeth_pack
-		}.elsewhen(meta_wire.op_code =/= IB_OPCODE.reserve &&
-					meta_wire.op_code =/= IB_OPCODE.reserve0){
-			pack_class := raw_pack
 		}.otherwise{
-			pack_class := empty_pack
-		}
+            meta_wire.pkg_length  := Util.reverse(udp_header.length) -8.U-12.U
+			pack_class := raw_pack
+        }
 	}
 
 	when(state === s_head ){  //todo need to be checked
@@ -122,8 +124,7 @@ class HeadProcess() extends Module{
 	meta_wire.psn         := Util.reverse(ibh_header.psn)
 	meta_wire.ecn         := ip_header.ecn === 3.U
 	meta_wire.vaddr       := Util.reverse(reth_header.vaddr)
-	meta_wire.pkg_length  := Util.reverse(udp_header.length)
-	meta_wire.msg_length  := 0.U(32.W)   //todo to be modified	
+	meta_wire.msg_length  := Util.reverse(reth_header.length)
 	meta_wire.user_define := 0.U(336.W)  //todo to be modified
 	
 }

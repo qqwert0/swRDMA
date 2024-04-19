@@ -71,6 +71,7 @@ class RxDispatch() extends Module{
 		}
 		is(sDATA){
 			when(conn_rsp_fifo.io.out.fire()){
+				state							:= sIDLE
 				when(PKG_JUDGE.HAVE_DATA(meta_Reg.op_code)){
 					io.dma_meta_out.valid			:= 1.U
 					io.dma_meta_out.bits.dma_gen(meta_Reg.op_code, meta_Reg.qpn, meta_Reg.vaddr, meta_Reg.pkg_length, meta_Reg.msg_length)    

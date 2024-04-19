@@ -129,15 +129,15 @@ class Event_meta()extends Bundle{
         pkg_length  := length_i
         user_define := 0.U
     }
-    def local_event(cmd_i:IB_OPCODE.Type, qpn_i:UInt, l_vaddr_i:UInt, vaddr_i:UInt, length_i:UInt)={
+    def local_event(cmd_i:IB_OPCODE.Type, qpn_i:UInt, l_vaddr_i:UInt, vaddr_i:UInt, msg_length_i:UInt, pkg_length_i:UInt)={
         op_code     := cmd_i
         qpn         := qpn_i
         psn         := 0.U
         ecn         := false.B
         l_vaddr     := l_vaddr_i
         r_vaddr     := vaddr_i
-        msg_length  := 0.U
-        pkg_length  := length_i
+        msg_length  := msg_length_i
+        pkg_length  := pkg_length_i
         user_define := 0.U
     }
 }

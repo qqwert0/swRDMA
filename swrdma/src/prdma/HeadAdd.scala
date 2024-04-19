@@ -91,7 +91,7 @@ class HeadAdd() extends Module{
 
 
 
-	val usr_defined_header_len = Wire(UInt(32.W))
+	val usr_defined_header_len = Reg(UInt(32.W))
 	when(meta_fifo.io.out.bits.header_len === 0.U){
 		usr_defined_header_len := 0.U
 	}.elsewhen(meta_fifo.io.out.bits.header_len === 1.U){
@@ -112,11 +112,11 @@ class HeadAdd() extends Module{
     ip_head       				    := 0.U.asTypeOf(ip_head)
     ip_head.version_IHL            	:= "h45".U
 	when(pack_class===reth_pack){
-			ip_head.length := meta_fifo.io.out.bits.pkg_length + CONFIG.IP_HEADER_LEN.U + CONFIG.UDP_HEADER_LEN.U + CONFIG.IBH_HEADER_LEN.U + CONFIG.RETH_HEADER_LEN.U + usr_defined_header_len
+			ip_head.length := meta_fifo.io.out.bits.pkg_length + (CONFIG.IP_HEADER_LEN/8).U + (CONFIG.UDP_HEADER_LEN/8).U + (CONFIG.IBH_HEADER_LEN/8).U + (CONFIG.RETH_HEADER_LEN/8).U + usr_defined_header_len
 	}.elsewhen(pack_class===aeth_pack){
-			ip_head.length := meta_fifo.io.out.bits.pkg_length + CONFIG.IP_HEADER_LEN.U + CONFIG.UDP_HEADER_LEN.U + CONFIG.IBH_HEADER_LEN.U + CONFIG.AETH_HEADER_LEN.U + usr_defined_header_len
+			ip_head.length := meta_fifo.io.out.bits.pkg_length + (CONFIG.IP_HEADER_LEN/8).U + (CONFIG.UDP_HEADER_LEN/8).U + (CONFIG.IBH_HEADER_LEN/8).U + (CONFIG.AETH_HEADER_LEN/8).U + usr_defined_header_len
 	}.otherwise{
-			ip_head.length := meta_fifo.io.out.bits.pkg_length + CONFIG.IP_HEADER_LEN.U + CONFIG.UDP_HEADER_LEN.U + CONFIG.IBH_HEADER_LEN.U + usr_defined_header_len
+			ip_head.length := meta_fifo.io.out.bits.pkg_length + (CONFIG.IP_HEADER_LEN/8).U + (CONFIG.UDP_HEADER_LEN/8).U + (CONFIG.IBH_HEADER_LEN/8).U + usr_defined_header_len
 	}
 	
 	
@@ -131,7 +131,7 @@ class HeadAdd() extends Module{
     udp_head                        := 0.U.asTypeOf(udp_head)
     udp_head.src_prot               := Util.reverse(CONFIG.RDMA_DEFAULT_PORT.U)
     udp_head.des_prot               := Util.reverse(conn_fifo.io.out.bits.remote_udp_port)
-    udp_head.length                 := Util.reverse(ip_head.length - CONFIG.IP_HEADER_LEN.U)
+    udp_head.length                 := Util.reverse(ip_head.length - (CONFIG.IP_HEADER_LEN/8).U)
 
     val ibh_head = Wire(new IBH_HEADER())
     ibh_head       := 0.U.asTypeOf(ibh_head)	
@@ -153,7 +153,7 @@ class HeadAdd() extends Module{
 
 	val reth_head = Wire(new RETH_HEADER())
 	reth_head := 0.U.asTypeOf(reth_head)
-	reth_head.length := Util.reverse(ip_head.length - CONFIG.IP_HEADER_LEN.U - CONFIG.UDP_HEADER_LEN.U - CONFIG.IBH_HEADER_LEN.U)
+	reth_head.length := Util.reverse(meta_fifo.io.out.bits.msg_length)
 	reth_head.r_key := 0.U 
 	reth_head.vaddr := Util.reverse(meta_fifo.io.out.bits.r_vaddr)
 
