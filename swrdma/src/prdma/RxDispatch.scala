@@ -16,9 +16,10 @@ class RxDispatch() extends Module{
 
 		val conn_req 			= (Decoupled(new Conn_req()))
 		val conn_rsp 			= Flipped(Decoupled(new Conn_state()))
+		val cc_req 				= (Decoupled(new CC_req()))
 
 		val drop_meta_out	    = (Decoupled(new Drop_meta()))
-		val cc_meta_out			= (Decoupled(new CC_meta()))
+		val cc_meta_out			= (Decoupled(new Pkg_meta()))
 		val dma_meta_out		= (Decoupled(new Dma_meta()))
 		val event_meta_out		= (Decoupled(new Pkg_meta()))
 	})
@@ -40,11 +41,13 @@ class RxDispatch() extends Module{
 	val state                   = RegInit(sIDLE)
 
 	meta_fifo.io.out.ready                    := io.conn_req.ready
-    conn_rsp_fifo.io.out.ready                := io.drop_meta_out.ready & io.cc_meta_out.ready & io.dma_meta_out.ready & io.event_meta_out.ready
+    conn_rsp_fifo.io.out.ready                := io.drop_meta_out.ready & io.cc_meta_out.ready & io.dma_meta_out.ready & io.event_meta_out.ready & io.cc_req.ready
 
 
     ToZero(io.conn_req.valid)                 
-    ToZero(io.conn_req.bits)                              
+    ToZero(io.conn_req.bits)     
+    ToZero(io.cc_req.valid)                 
+    ToZero(io.cc_req.bits)  	                         
     ToZero(io.drop_meta_out.valid)                 
     ToZero(io.drop_meta_out.bits)
     ToZero(io.cc_meta_out.valid)                 
@@ -90,12 +93,17 @@ class RxDispatch() extends Module{
 					when(meta_Reg.psn === conn_rsp_fifo.io.out.bits.rx_epsn){                     
 						when(cc_pkg_type(meta_Reg.op_code.asUInt) === 1.U){
 							io.cc_meta_out.valid		:= 1.U
-							io.cc_meta_out.bits.cc_gen(meta_Reg.op_code, meta_Reg.qpn, meta_Reg.pkg_length, meta_Reg.user_define)
+							io.cc_meta_out.bits			:= meta_Reg
+							io.cc_req.valid				:= 1.U
+							io.cc_req.bits.qpn			:= meta_Reg.qpn
+							io.cc_req.bits.is_wr		:= false.B
+							io.cc_req.bits.lock			:= true.B
+						}.otherwise{
+							io.event_meta_out.valid			:= 1.U
+							io.event_meta_out.bits			:= meta_Reg
 						}
-						io.event_meta_out.valid			:= 1.U
-						io.event_meta_out.bits			:= meta_Reg
 						io.conn_req.valid            	:= 1.U
-						io.conn_req.bits.qpn         	:= meta_fifo.io.out.bits.qpn
+						io.conn_req.bits.qpn         	:= meta_Reg.qpn
 						io.conn_req.bits.is_wr			:= true.B
 						io.conn_req.bits.conn_state		:= conn_rsp_fifo.io.out.bits
 						when(meta_Reg.op_code === IB_OPCODE.RC_READ_REQUEST){
@@ -112,10 +120,14 @@ class RxDispatch() extends Module{
 					when(meta_Reg.psn === conn_rsp_fifo.io.out.bits.rx_old_unack){
 						when(cc_pkg_type(meta_Reg.op_code.asUInt) === 1.U){
 							io.cc_meta_out.valid		:= 1.U
-							io.cc_meta_out.bits.cc_gen(meta_Reg.op_code, meta_Reg.qpn, meta_Reg.pkg_length, meta_Reg.user_define)
+							io.cc_meta_out.bits			:= meta_Reg
+							io.cc_req.valid				:= 1.U
+							io.cc_req.bits.qpn			:= meta_Reg.qpn
+							io.cc_req.bits.is_wr		:= false.B
+							io.cc_req.bits.lock			:= true.B							
 						}
 						io.conn_req.valid            	:= 1.U
-						io.conn_req.bits.qpn         	:= meta_fifo.io.out.bits.qpn
+						io.conn_req.bits.qpn         	:= meta_Reg.qpn
 						io.conn_req.bits.is_wr			:= true.B
 						io.conn_req.bits.conn_state		:= conn_rsp_fifo.io.out.bits
 						io.conn_req.bits.conn_state.rx_old_unack	:= conn_rsp_fifo.io.out.bits.rx_old_unack + 1.U       
@@ -125,17 +137,25 @@ class RxDispatch() extends Module{
 				}.elsewhen(meta_Reg.op_code === IB_OPCODE.RC_ACK){
 					when(cc_pkg_type(meta_Reg.op_code.asUInt) === 1.U){
 						io.cc_meta_out.valid		:= 1.U
-						io.cc_meta_out.bits.cc_gen(meta_Reg.op_code, meta_Reg.qpn, meta_Reg.pkg_length, meta_Reg.user_define)
+						io.cc_meta_out.bits			:= meta_Reg
+						io.cc_req.valid				:= 1.U
+						io.cc_req.bits.qpn			:= meta_Reg.qpn
+						io.cc_req.bits.is_wr		:= false.B
+						io.cc_req.bits.lock			:= true.B						
 					}
 					io.conn_req.valid            	:= 1.U
-					io.conn_req.bits.qpn         	:= meta_fifo.io.out.bits.qpn
+					io.conn_req.bits.qpn         	:= meta_Reg.qpn
 					io.conn_req.bits.is_wr			:= true.B
 					io.conn_req.bits.conn_state		:= conn_rsp_fifo.io.out.bits
 					io.conn_req.bits.conn_state.rx_old_unack	:= meta_Reg.psn  					
 				}.otherwise{
 					when(cc_pkg_type(meta_Reg.op_code.asUInt) === 1.U){
 						io.cc_meta_out.valid		:= 1.U
-						io.cc_meta_out.bits.cc_gen(meta_Reg.op_code, meta_Reg.qpn, meta_Reg.pkg_length, meta_Reg.user_define)
+						io.cc_meta_out.bits			:= meta_Reg
+						io.cc_req.valid				:= 1.U
+						io.cc_req.bits.qpn			:= meta_Reg.qpn
+						io.cc_req.bits.is_wr		:= false.B
+						io.cc_req.bits.lock			:= true.B						
 					}
 				}
 			} 	

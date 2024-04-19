@@ -172,6 +172,17 @@ object  PKG_JUDGE{
         result
     }   
 
+    def INFER_PKG(opcode:IB_OPCODE.Type) = {
+        val result = Wire(new Bool())
+        when((opcode === IB_OPCODE.RC_READ_RESP_FIRST) | (opcode === IB_OPCODE.RC_READ_RESP_LAST) | (opcode === IB_OPCODE.RC_READ_RESP_ONLY) | (opcode === IB_OPCODE.RC_READ_RESP_MIDDLE) |
+            (opcode === IB_OPCODE.RC_WRITE_FIRST) | (opcode === IB_OPCODE.RC_WRITE_LAST) | (opcode === IB_OPCODE.RC_WRITE_ONLY) | (opcode === IB_OPCODE.RC_WRITE_MIDDLE) |
+            (opcode === IB_OPCODE.RC_READ_REQUEST)){
+            result := true.B
+        }.otherwise{
+            result := false.B
+        }
+        result
+    } 
 
 
 

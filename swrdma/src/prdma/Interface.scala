@@ -22,16 +22,7 @@ class App_meta()extends Bundle{
 }
 
 
-class Pkg_meta()extends Bundle{
-    val op_code = IB_OPCODE()
-    val qpn = UInt(24.W)
-	val psn = UInt(24.W)
-    val ecn = Bool()
-    val vaddr = UInt(64.W)         //RDMA message vaddr
-    val pkg_length = UInt(32.W)   //packet length (udp totol length - UDP & IBH & RETH/AETH & userdefine headers length)
-    val msg_length = UInt(32.W)   //RDMA message length 
-    val user_define = UInt(352.W)
-}
+
 
 class Drop_meta()extends Bundle{
     val is_drop = Bool()
@@ -68,6 +59,18 @@ class Dma_meta()extends Bundle{
 }
 
 
+class Pkg_meta()extends Bundle{
+    val op_code = IB_OPCODE()
+    val qpn = UInt(24.W)
+	val psn = UInt(24.W)
+    val ecn = Bool()
+    val vaddr = UInt(64.W)         //RDMA message vaddr
+    val pkg_length = UInt(32.W)   //packet length (udp totol length - UDP & IBH & RETH/AETH & userdefine headers length)
+    val msg_length = UInt(32.W)   //RDMA message length 
+    val user_define = UInt(352.W)
+}
+
+
 class Event_meta()extends Bundle{
     val op_code = IB_OPCODE()
     val qpn = UInt(24.W)
@@ -77,7 +80,7 @@ class Event_meta()extends Bundle{
     val r_vaddr = UInt(64.W)    //remote vaddr
     val msg_length = UInt(32.W)  
     val pkg_length = UInt(32.W)
-    val header_len = UInt(4.W)  //0:0B, 1:4B, 2:8B, 3:16B, 4:32B, 5:42B
+    val header_len = UInt(4.W)  //0:0B, 1:4B, 2:8B, 3:16B, 4:32B, 5:44B
     val user_define = UInt(352.W)
     def event_gen(cmd_i:IB_OPCODE.Type, qpn_i:UInt, psn_i:UInt, ecn_i:Bool, vaddr_i:UInt, msg_length_i:UInt, pkg_length_i:UInt, user_define_i:UInt)={
         op_code     := cmd_i
@@ -232,9 +235,21 @@ class Conn_state()extends Bundle{
 
 //
 
+class CC_init()extends Bundle{
+    val qpn             = UInt(24.W)
+    val cc_state      = new CC_state()          
+}
+
+class CC_req()extends Bundle{
+    val qpn             = UInt(24.W)
+    val is_wr           = Bool()
+    val lock            = Bool()
+    val cc_state        = new CC_state()   
+}
+
 class CC_state()extends Bundle{
     val credit          = UInt(32.W)  
     val rate            = UInt(32.W)  
     val timer           = UInt(32.W)  //上次发送数据时的时间，用于计算数据包是否能否发送
-	val userdefine      = UInt(352.W)   
+	val user_define      = UInt(352.W)   
 }

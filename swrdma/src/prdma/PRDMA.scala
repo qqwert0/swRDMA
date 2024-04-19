@@ -30,6 +30,7 @@ class PRDMA() extends Module{
         val s_net_rx_data       = Flipped(Decoupled(new AXIS(512)))
         //QP INIT
         val qp_init	            = Flipped(Decoupled(new Conn_init()))
+        val cc_init	            = Flipped(Decoupled(new CC_init()))
 
         val local_ip_address    = Input(UInt(32.W))
 	})
@@ -61,6 +62,8 @@ class PRDMA() extends Module{
     val raw_rshift = Module(new RSHIFT(40,CONFIG.DATA_WIDTH))    
 
     val rx_arbiter    = SerialArbiter(new AXIS(512), 3)
+    val cus_head_proc = Module(new CusHeadProcess())
+
 
     val rx_cus_router      = SerialRouter(new AXIS(512), 6)
     val rshift1 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN1/8,CONFIG.DATA_WIDTH))
@@ -73,9 +76,13 @@ class PRDMA() extends Module{
     val rx_dispatch = Module(new RxDispatch())
     val pkg_drop = Module(new PkgDrop())
     val data_writer = Module(new DataWriter())
-
+    val rx_cc = Module(new RX_CC())
+    val rx_cc_req_arbiter = XArbiter(new CC_req(), 2)
 
     val handle_tx = Module(new HandleTx())
+    val schedule = Module(new Schedule())
+    val tx_cc = Module(new TX_CC())
+    val tx_cc_req_arbiter = XArbiter(new CC_req(), 2)
 
     val tx_event_arbiter = XArbiter(new Event_meta(),2)
     val tx_dispatch = Module(new TxDispatch())
@@ -92,7 +99,7 @@ class PRDMA() extends Module{
     val reth_lshift = Module(new LSHIFT(56,CONFIG.DATA_WIDTH)) 
     val aeth_lshift = Module(new LSHIFT(44,CONFIG.DATA_WIDTH))
     val raw_lshift = Module(new LSHIFT(40,CONFIG.DATA_WIDTH))
-    
+
     val user_add = Module(new UserAdd())
     val head_add = Module(new HeadAdd())
 
@@ -103,6 +110,7 @@ class PRDMA() extends Module{
     val conn_table = Module(new CONN_TABLE())
     val local_vaddr_q = Module(new MULTI_Q(UInt(64.W),512,2048))
     val vaddr_table = Module(new VaddrTable())
+    val cc_table = Module(new CCTable())
 
      /////////////////TX/////////////////////////////////////////
 
@@ -115,7 +123,15 @@ class PRDMA() extends Module{
 	rx_arbiter.io.in(0)						<> reth_rshift.io.out
 	rx_arbiter.io.in(1)						<> aeth_rshift.io.out
     rx_arbiter.io.in(2)                     <> raw_rshift.io.out
-	rx_arbiter.io.out						<> rx_cus_router.io.in
+	rx_arbiter.io.out						<> cus_head_proc.io.rx_data_in
+
+    
+
+	cus_head_proc.io.meta_in	        	<> head_process.io.meta_out
+	cus_head_proc.io.rx_data_out	    	<> rx_cus_router.io.in
+	cus_head_proc.io.swrdma_head_choice     := 1.U
+
+
     rx_cus_router.io.idx                    := 1.U
     rx_cus_router.io.out(0)                 <> rx_cus_arbiter.io.in(0)
     rx_cus_router.io.out(1)                 <> rshift1.io.in
@@ -131,11 +147,12 @@ class PRDMA() extends Module{
 
 
 
-	rx_dispatch.io.meta_in                  <> head_process.io.meta_out
-	rx_dispatch.io.cc_pkg_type			    := 1.U
+	rx_dispatch.io.meta_in                  <> cus_head_proc.io.meta_out
+	rx_dispatch.io.cc_pkg_type			    := 0.U
 	rx_dispatch.io.conn_req 			    <> conn_table.io.rx2conn_req
 	rx_dispatch.io.conn_rsp 			    <> conn_table.io.conn2rx_rsp
-	rx_dispatch.io.cc_meta_out			    <> handle_tx.io.cc_meta_in //fix it add CC core
+    rx_dispatch.io.cc_req 			        <> rx_cc_req_arbiter.io.in(0)
+	rx_dispatch.io.cc_meta_out			    <> rx_cc.io.cc_meta_in 
 	rx_dispatch.io.event_meta_out           <> handle_tx.io.pkg_meta_in
 
 	pkg_drop.io.meta_in	        	        <> rx_dispatch.io.drop_meta_out
@@ -150,11 +167,27 @@ class PRDMA() extends Module{
 	data_writer.io.dma_out				    <> io.m_mem_write_cmd	        
     ToZero(local_vaddr_q.io.front.valid)    
     ToZero(local_vaddr_q.io.front.bits)   
-	     
+
+    
+
+
+    rx_cc.io.cc_state_in                    <> cc_table.io.cc2rx_rsp
+    rx_cc.io.cc_req                         <> rx_cc_req_arbiter.io.in(1)
+    rx_cc.io.cc_meta_out                    <> handle_tx.io.cc_meta_in
+
+
 	handle_tx.io.app_meta_in                <> io.s_tx_meta	        				
 	handle_tx.io.local_read_addr            <> local_vaddr_q.io.push		
 	handle_tx.io.priori_meta_out		    <> tx_event_arbiter.io.in(0)
-	handle_tx.io.event_meta_out             <> tx_event_arbiter.io.in(1)//fix it add CC core
+	handle_tx.io.event_meta_out             <> schedule.io.meta_in
+
+    schedule.io.cc_req                      <> tx_cc_req_arbiter.io.in(0)
+    schedule.io.event_meta_out              <> tx_cc.io.cc_meta_in
+
+             
+    tx_cc.io.cc_state_in                    <> cc_table.io.cc2tx_rsp
+    tx_cc.io.cc_req                         <> tx_cc_req_arbiter.io.in(1)
+    tx_cc.io.cc_meta_out                    <> tx_event_arbiter.io.in(1)
 
 	tx_dispatch.io.meta_in	                <> tx_event_arbiter.io.out   	
 	tx_dispatch.io.conn_req 			    <> conn_table.io.tx2conn_req	
@@ -163,6 +196,10 @@ class PRDMA() extends Module{
 	   
 	conn_table.io.conn_init	                <> io.qp_init 
 	conn_table.io.conn2tx_rsp	            <> head_add.io.conn_state
+
+	cc_table.io.rx2cc_req                   <> rx_cc_req_arbiter.io.out
+    cc_table.io.tx2cc_req                   <> tx_cc_req_arbiter.io.out
+	cc_table.io.cc_init                     <> io.cc_init
 
     tx_cus_router.io.in                     <> io.s_mem_read_data
     tx_cus_router.io.idx                    := 1.U
@@ -189,6 +226,15 @@ class PRDMA() extends Module{
     head_add.io.aeth_data_in                 <> aeth_lshift.io.out
     head_add.io.raw_data_in                 <> raw_lshift.io.out
     head_add.io.tx_data_out	   	            <> io.m_net_tx_data
-	head_add.io.local_ip_address            := "h0102".U
+	head_add.io.local_ip_address            := io.local_ip_address
+
 
 }
+
+
+
+
+
+  
+
+

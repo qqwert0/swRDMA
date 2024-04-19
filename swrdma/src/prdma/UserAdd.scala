@@ -50,7 +50,7 @@ class UserAdd() extends Module{
 	
 	switch(state){
 		is(sIDLE){
-			when(meta_fifo.io.out.fire() & data_fifo.io.out.fire()){
+			when(meta_fifo.io.out.fire()){
 				io.meta_out.valid						:= 1.U
 				io.meta_out.bits						:= meta_fifo.io.out.bits
 				when(PKG_JUDGE.RETH_PKG(meta_fifo.io.out.bits.op_code)){

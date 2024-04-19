@@ -13,7 +13,7 @@ class HandleTx() extends Module{
 
 		val app_meta_in	        = Flipped(Decoupled(new App_meta()))
 		val pkg_meta_in			= Flipped(Decoupled(new Pkg_meta()))
-		val cc_meta_in			= Flipped(Decoupled(new CC_meta()))   //fix
+		val cc_meta_in			= Flipped(Decoupled(new Pkg_meta()))   //fix
 
 		val local_read_addr		= (Decoupled(new MQ_POP_REQ(UInt(64.W))))
 
@@ -23,7 +23,7 @@ class HandleTx() extends Module{
 
 	val app_fifo = XQueue(new App_meta(), entries=16)
 	val pkg_fifo = XQueue(new Pkg_meta(), entries=16)
-	val cc_fifo = XQueue(new CC_meta(), entries=16)   //fix
+	val cc_fifo = XQueue(new Pkg_meta(), entries=16)   //fix
 	io.app_meta_in 		    <> app_fifo.io.in
 	io.pkg_meta_in 		    <> pkg_fifo.io.in
 	io.cc_meta_in			<> cc_fifo.io.in
@@ -59,8 +59,13 @@ class HandleTx() extends Module{
 	switch(state){
 		is(sIDLE){
 			when(cc_fifo.io.out.fire()){
-				io.priori_meta_out.valid			:= 1.U
-				io.priori_meta_out.bits.ack_gen(cc_fifo.io.out.bits.qpn, 0.U, 0.U)
+				when(PKG_JUDGE.INFER_PKG(pkg_fifo.io.out.bits.op_code)){
+					io.event_meta_out.valid			:= 1.U
+					io.event_meta_out.bits.event_gen(cc_fifo.io.out.bits.op_code, cc_fifo.io.out.bits.qpn, cc_fifo.io.out.bits.psn, cc_fifo.io.out.bits.ecn, cc_fifo.io.out.bits.vaddr, cc_fifo.io.out.bits.msg_length, cc_fifo.io.out.bits.pkg_length, cc_fifo.io.out.bits.user_define)
+				}.otherwise{
+					io.priori_meta_out.valid			:= 1.U
+					io.priori_meta_out.bits.event_gen(cc_fifo.io.out.bits.op_code, cc_fifo.io.out.bits.qpn, cc_fifo.io.out.bits.psn, cc_fifo.io.out.bits.ecn, cc_fifo.io.out.bits.vaddr, cc_fifo.io.out.bits.msg_length, cc_fifo.io.out.bits.pkg_length, cc_fifo.io.out.bits.user_define)
+				}
 			}.elsewhen(pkg_fifo.io.out.fire()){
 				pkg_meta							:= pkg_fifo.io.out.bits
 				when(PKG_JUDGE.WRITE_PKG(pkg_fifo.io.out.bits.op_code)){

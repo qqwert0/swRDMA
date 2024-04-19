@@ -16,3 +16,6 @@
 [submodule "network"]
 	path = network
 	url = git@github.com:qqwert0/network.git
+[submodule "core"]
+	path = core
+	url = https://github.com/HobbitQia/core/
