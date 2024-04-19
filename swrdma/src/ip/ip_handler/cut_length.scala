@@ -22,7 +22,7 @@ class cut_length extends Module{
     val totallength     = RegInit(UInt(16.W),0.U)
     switch(state){
         is(0.U){
-            when(io.data_in.fire()){
+            when(io.data_in.fire){
                 when(io.data_in.bits.last === 1.U){
                     val aaa = Module(new change)
                     aaa.io.data_in := io.data_in.bits.data(21,16)
@@ -36,7 +36,7 @@ class cut_length extends Module{
             }
         }
         is(1.U){
-            when(io.data_in.bits.last === 1.U& io.data_in.fire()){
+            when(io.data_in.bits.last === 1.U& io.data_in.fire){
                 state := 0.U
             }
         }

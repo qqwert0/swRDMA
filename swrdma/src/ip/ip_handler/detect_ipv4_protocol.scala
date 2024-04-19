@@ -36,7 +36,7 @@ class detect_ipv4_protocol extends Module{
     io.roce_out.bits.data   := 0.U
     io.roce_out.bits.keep   := 0.U
     io.roce_out.bits.last   := 0.U
-    when(io.data_in.fire()){
+    when(io.data_in.fire){
         // when(last === 1.U){
         //     type1           := io.data_in.bits.data(79,72)
         //     last            := 0.U

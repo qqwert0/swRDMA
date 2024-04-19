@@ -91,7 +91,7 @@ class CMACTop extends RawModule{
 
 		val data_cnt = RegInit(0.U(16.W))
 		val tx_valid = RegInit(0.U(1.W))
-		when(cmac.io.s_net_tx.fire()){
+		when(cmac.io.s_net_tx.fire){
 			when(data_cnt === 20.U){
 				data_cnt	:= 0.U
 			}.otherwise{
@@ -109,7 +109,7 @@ class CMACTop extends RawModule{
 		cmac.io.s_net_tx.valid 	:= tx_valid
 		cmac.io.s_net_tx.bits.data		:= data_cnt
 		cmac.io.s_net_tx.bits.keep		:= "hffffffffffffffff".U
-		cmac.io.s_net_tx.bits.last		:= cmac.io.s_net_tx.fire() & (data_cnt === 20.U)
+		cmac.io.s_net_tx.bits.last		:= cmac.io.s_net_tx.fire & (data_cnt === 20.U)
 	}	  
 
 

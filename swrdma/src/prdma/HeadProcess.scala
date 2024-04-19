@@ -63,14 +63,14 @@ class HeadProcess() extends Module{
 
 	switch(state){
 		is(s_head){
-			when(rx_data_fifo.io.out.fire() && rx_data_fifo.io.out.bits.last =/= 1.U ){
+			when(rx_data_fifo.io.out.fire && rx_data_fifo.io.out.bits.last =/= 1.U ){
 				state := s_payload
 			}.otherwise{
 				state := s_head
 			}
 		}
 		is(s_payload){
-			when(rx_data_fifo.io.out.fire()&& rx_data_fifo.io.out.bits.last === 1.U){
+			when(rx_data_fifo.io.out.fire&& rx_data_fifo.io.out.bits.last === 1.U){
 				state := s_head
 			}.otherwise{
 				state := s_payload

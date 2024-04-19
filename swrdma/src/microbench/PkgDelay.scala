@@ -68,7 +68,7 @@ class PkgDelay extends Module{
 	val state2 = RegInit(k1)
 	switch(state2){
 		is(k1){
-			when(packFifo.io.out.fire()&&packtpFifo.io.out.fire()){
+			when(packFifo.io.out.fire&&packtpFifo.io.out.fire){
 				state2:=k2
 			}.otherwise{
 				state2:=k1

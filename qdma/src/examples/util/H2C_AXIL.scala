@@ -67,7 +67,7 @@ class H2C_AXIL() extends Module {
         is (sSEND_CMD) {
             commandValid    := true.B
             countTime       := countTime + 1.U
-            when (start === 0.U && io.h2cCommand.fire()) {
+            when (start === 0.U && io.h2cCommand.fire) {
                 h2cState        := sIDLE
                 commandValid    := false.B
             }
@@ -79,7 +79,7 @@ class H2C_AXIL() extends Module {
     }
 
     // H2C Command Update
-    when (io.h2cCommand.fire()) {
+    when (io.h2cCommand.fire) {
         countCommand    := Mux(
             countCommand =/= io.totalCommands - 1.U,
             countCommand + 1.U,
@@ -94,7 +94,7 @@ class H2C_AXIL() extends Module {
     }
 
     // H2C Data Verification
-    when(io.h2cData.fire()) {
+    when(io.h2cData.fire) {
         countWord       := Mux(
             countWord =/= io.totalWords - 1.U,
             countWord + 1.U,

@@ -46,7 +46,7 @@ class mac_ip_encode extends Module{
     handle_arp_reply1.io.mymac          := io.mac_address
 
 
-    //handle_arp_reply1.io.data_out.fire()
+    //handle_arp_reply1.io.data_out.fire
 
     lshift.io.in                        <> handle_arp_reply1.io.data_out
     

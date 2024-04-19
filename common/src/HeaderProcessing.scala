@@ -31,8 +31,8 @@ class AddHeader[TMeta<:Data,TData<:AXIS](genMeta:TMeta, genData:TData, header_wi
 
 	when(state === sHeader){
 		io.outData.valid	:= io.inMeta.valid & shift.io.out.valid
-		io.inMeta.ready		:= io.outData.fire()
-		shift.io.out.ready		:= io.outData.fire()
+		io.inMeta.ready		:= io.outData.fire
+		shift.io.out.ready		:= io.outData.fire
 	}.otherwise{
 		io.outData.valid	:= shift.io.out.valid
 		io.inMeta.ready		:= 0.U
@@ -41,7 +41,7 @@ class AddHeader[TMeta<:Data,TData<:AXIS](genMeta:TMeta, genData:TData, header_wi
 	switch(state){
 		is(sHeader){
 			io.outData.bits.data	:= Cat(shift.io.out.bits.data(data_width-1,header_width*8), io.inMeta.bits.asUInt())
-			when(io.outData.fire() && !io.outData.bits.last){
+			when(io.outData.fire && !io.outData.bits.last){
 				state		:= sPayload
 			}.otherwise{
 				state		:= sHeader
@@ -49,7 +49,7 @@ class AddHeader[TMeta<:Data,TData<:AXIS](genMeta:TMeta, genData:TData, header_wi
 		}
 		is(sPayload){
 			io.outData.bits.data	:= shift.io.out.bits.data
-			when(io.outData.fire() && io.outData.bits.last===1.U){
+			when(io.outData.fire && io.outData.bits.last===1.U){
 				state		:= sHeader
 			}.otherwise{
 				state		:= sPayload
@@ -89,8 +89,8 @@ class SplitHeader[TMeta<:Data,TData<:AXIS](genMeta:TMeta, genData:TData, header_
 
 	when(state === sHeader){
 		io.inData.ready		:= io.outMeta.ready & shift.io.in.ready
-		io.outMeta.valid	:= io.inData.fire()
-		shift.io.in.valid	:= io.inData.fire()
+		io.outMeta.valid	:= io.inData.fire
+		shift.io.in.valid	:= io.inData.fire
 	}.otherwise{
 		shift.io.in.valid	:= io.inData.valid
 		io.inData.ready		:= shift.io.in.ready
@@ -99,14 +99,14 @@ class SplitHeader[TMeta<:Data,TData<:AXIS](genMeta:TMeta, genData:TData, header_
 
 	switch(state){
 		is(sHeader){
-			when(io.inData.fire() & !io.inData.bits.last===1.U){
+			when(io.inData.fire & !io.inData.bits.last===1.U){
 				state		:= sPayload
 			}.otherwise{
 				state		:= sHeader
 			}
 		}
 		is(sPayload){
-			when(io.inData.fire() && io.inData.bits.last===1.U){
+			when(io.inData.fire && io.inData.bits.last===1.U){
 				state		:= sHeader
 			}.otherwise{
 				state		:= sPayload

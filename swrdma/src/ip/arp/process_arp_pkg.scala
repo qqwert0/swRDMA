@@ -38,7 +38,7 @@ class process_arp_pkg extends Module{
     io.replymeta.valid   := 0.U
     io.arpinsert.bits    := 0.U
     io.arpinsert.valid   := 0.U    
-    when(io.data_in.fire()){ 
+    when(io.data_in.fire){ 
         when(last === 1.U){
             // when(io.data_in.bits.data(335,304) === io.myip){
                 when(io.data_in.bits.data(175,160) === 256.U){ // resquest

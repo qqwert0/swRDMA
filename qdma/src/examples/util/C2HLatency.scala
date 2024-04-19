@@ -52,7 +52,7 @@ class C2HLatency extends Module{
 	val offset_addr				= RegInit(UInt(32.W),0.U)
 	val offset_data				= RegInit(UInt(32.W),0.U)
 
-	val data_fire_last_beat = io.c2h_data.fire() && io.c2h_data.bits.last
+	val data_fire_last_beat = io.c2h_data.fire && io.c2h_data.bits.last
 	val ack_fire = io.ack_fire===1.U
 	
 	when(io.start === 1.U){
@@ -74,9 +74,9 @@ class C2HLatency extends Module{
 	}
 
 	when(io.start === 1.U){
-		when(io.c2h_cmd.fire() && ack_fire){
+		when(io.c2h_cmd.fire && ack_fire){
 			count_latency_cmd	:= count_latency_cmd
-		}.elsewhen(io.c2h_cmd.fire()){
+		}.elsewhen(io.c2h_cmd.fire){
 			count_latency_cmd	:= count_latency_cmd - count_time
 		}.elsewhen(ack_fire){
 			count_latency_cmd	:= count_latency_cmd + count_time
@@ -131,7 +131,7 @@ class C2HLatency extends Module{
 			offset_data				:= io.offset
 		}
 		is(sSEND){
-			when(io.c2h_cmd.fire()){
+			when(io.c2h_cmd.fire){
 				state_cmd	:= sWAIT
 			}
 			count_wait 		:= 0.U
@@ -162,7 +162,7 @@ class C2HLatency extends Module{
 			}
 		}
 		is(sSEND){
-			when(io.c2h_data.fire() && (count_send_word + 1.U === io.total_words)){
+			when(io.c2h_data.fire && (count_send_word + 1.U === io.total_words)){
 				state_data		:= sDONE
 			}
 		}
@@ -174,12 +174,12 @@ class C2HLatency extends Module{
 	}
 	io.c2h_data.valid	:= state_data === sSEND
 
-	when(io.c2h_cmd.fire()){
+	when(io.c2h_cmd.fire){
 		offset_addr		:= offset_addr + io.burst_length
 		count_send_cmd	:= count_send_cmd + 1.U
 	}
 
-	when(io.c2h_data.fire()){
+	when(io.c2h_data.fire){
 		count_send_word	:= count_send_word + 1.U
 		offset_data		:= offset_data + 64.U
 

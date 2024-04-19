@@ -47,7 +47,7 @@ class PkgProc2 extends Module{
 	switch(state1){
 		is(s_init){
 			reg_idle_cycle	:= io.init_idle_cycle
-			when(io.data_in.fire()){
+			when(io.data_in.fire){
 				state1:=s_judge
 			}
 		}		
@@ -63,7 +63,7 @@ class PkgProc2 extends Module{
 			state1:=s_judge
 		}
 		is(s_judge){
-			when(io.data_in.fire()){	
+			when(io.data_in.fire){	
 				rtt := timer - io.data_in.bits.data(223,160)
 				state1:=s_wait
 			}
@@ -101,7 +101,7 @@ class PkgProc2 extends Module{
 		}
 
 	}
-	when((state2 === s2)&(io.data_in.fire())){
+	when((state2 === s2)&(io.data_in.fire)){
 		sending_cnt := sending_cnt + 1.U
 		io.q_time_out.valid := 1.U
 	}.otherwise{
@@ -111,7 +111,7 @@ class PkgProc2 extends Module{
 	io.c2h_req.valid := state2 === s3
 	io.data_in.ready := state2 === s1 || state2 === s3  || (state2 === s2 && io.q_time_out.ready === 1.U)
 	io.q_time_out.bits := io.data_in.bits.data
-	io.q_time_out.valid := io.data_in.fire() && state2 === s2
+	io.q_time_out.valid := io.data_in.fire && state2 === s2
 
 	class ila_proc(seq:Seq[Data]) extends BaseILA(seq)	  
   	val proc = Module(new ila_proc(Seq(	

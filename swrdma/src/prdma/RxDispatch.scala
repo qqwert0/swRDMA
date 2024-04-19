@@ -61,7 +61,7 @@ class RxDispatch() extends Module{
 
 	switch(state){
 		is(sIDLE){
-			when(meta_fifo.io.out.fire()){
+			when(meta_fifo.io.out.fire){
 				meta_Reg						:= meta_fifo.io.out.bits
 				io.conn_req.valid            	:= 1.U
 				io.conn_req.bits.qpn         	:= meta_fifo.io.out.bits.qpn
@@ -70,7 +70,7 @@ class RxDispatch() extends Module{
 			}
 		}
 		is(sDATA){
-			when(conn_rsp_fifo.io.out.fire()){
+			when(conn_rsp_fifo.io.out.fire){
 				state							:= sIDLE
 				when(PKG_JUDGE.HAVE_DATA(meta_Reg.op_code)){
 					io.dma_meta_out.valid			:= 1.U

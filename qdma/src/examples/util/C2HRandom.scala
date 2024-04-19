@@ -41,18 +41,18 @@ class C2HRandom extends Module{
 
 	//random generator
 	val fifo_random 			= XQueue(UInt(32.W), 64)
-	val gen_random_en 			= fifo_random.io.in.fire()
+	val gen_random_en 			= fifo_random.io.in.fire
 	val lfsr 					= LFSR(32,gen_random_en,Some(0x67893518))
 	fifo_random.io.in.valid		:= fifo_random.io.in.ready === 1.U && !reset.asUInt
 	fifo_random.io.in.bits 		:= lfsr
 	val align_to_1GB			= Wire(UInt(30.W))
 	align_to_1GB				:= fifo_random.io.out.bits << io.busrt_length_shift(3,0) //at most shift 2^15 = 32K
-	fifo_random.io.out.ready	:= io.c2h_cmd.fire()
+	fifo_random.io.out.ready	:= io.c2h_cmd.fire
 
 	//data fifo
 	val fifo_data				= XQueue(UInt(32.W), 64)
 	fifo_data.io.in.bits		:= align_to_1GB
-	fifo_data.io.in.valid		:= fifo_random.io.out.fire()
+	fifo_data.io.in.valid		:= fifo_random.io.out.fire
 
 	//counters
 	val count_time			= RegInit(UInt(32.W),0.U)
@@ -88,8 +88,8 @@ class C2HRandom extends Module{
 	}
 
 	//state machine
-	val cmd_nearly_done = io.c2h_cmd.fire() && (count_send_cmds + 1.U === io.total_cmds)
-	val data_nearly_done = io.c2h_data.fire() && (count_send_words + 1.U === io.total_words)
+	val cmd_nearly_done = io.c2h_cmd.fire && (count_send_cmds + 1.U === io.total_cmds)
+	val data_nearly_done = io.c2h_data.fire && (count_send_words + 1.U === io.total_words)
 
 	val sIDLE :: sSEND :: sDONE :: Nil = Enum(3)
 	val state_cmd			= RegInit(sIDLE)
@@ -138,7 +138,7 @@ class C2HRandom extends Module{
 		}
 	}
 
-	when(io.c2h_cmd.fire()){
+	when(io.c2h_cmd.fire){
 		count_send_cmds		:= count_send_cmds + 1.U
 		when(cur_q_cmd+1.U === io.total_qs){
 			cur_q_cmd		:= 0.U
@@ -147,7 +147,7 @@ class C2HRandom extends Module{
 		}
 	}
 
-	when(io.c2h_data.fire()){
+	when(io.c2h_data.fire){
 		count_send_words			:= count_send_words + 1.U
 		when(offset_data+64.U === io.burst_length){
 			io.c2h_data.bits.last	:= 1.U
@@ -162,7 +162,7 @@ class C2HRandom extends Module{
 		}
 	}
 
-	when(io.c2h_data.fire() && offset_data+64.U === io.burst_length){
+	when(io.c2h_data.fire && offset_data+64.U === io.burst_length){
 		fifo_data.io.out.ready	:= 1.U
 	}.otherwise{
 		fifo_data.io.out.ready	:= 0.U

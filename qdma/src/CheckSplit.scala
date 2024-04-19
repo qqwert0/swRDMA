@@ -36,7 +36,7 @@ class DataBoundarySplit extends Module{
 
 	switch(state){
 		is(sIDLE){
-			when(io.cmd_in.fire()){
+			when(io.cmd_in.fire){
 				cmd_temp				:= io.cmd_in.bits
                 state               	:= sREAD_DATA
 				cmd_fifo.io.in.valid		:= 1.U
@@ -44,7 +44,7 @@ class DataBoundarySplit extends Module{
 			}
 		}
 		is(sREAD_DATA){
-			when(io.data_in.fire()){
+			when(io.data_in.fire){
                 data_fifo.io.in.valid 			:= 1.U
 				data_fifo.io.in.bits 			<> io.data_in.bits 
 				data_fifo.io.in.bits.last		:= false.B
@@ -96,7 +96,7 @@ class CMDBoundaryCheck[T<:HasAddrLen](private val gen:T, page_size:Int, mini_pag
 
 	switch(state){
 		is(sIDLE){
-			when(io.in.fire()){
+			when(io.in.fire){
 				cmd_addr				:= io.in.bits.addr
 				cmd_len					:= io.in.bits.len			
 				cmd_temp				:= io.in.bits

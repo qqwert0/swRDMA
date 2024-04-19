@@ -58,7 +58,7 @@ class HandleTx() extends Module{
 
 	switch(state){
 		is(sIDLE){
-			when(cc_fifo.io.out.fire()){
+			when(cc_fifo.io.out.fire){
 				when(PKG_JUDGE.INFER_PKG(pkg_fifo.io.out.bits.op_code)){
 					io.event_meta_out.valid			:= 1.U
 					io.event_meta_out.bits.event_gen(cc_fifo.io.out.bits.op_code, cc_fifo.io.out.bits.qpn, cc_fifo.io.out.bits.psn, cc_fifo.io.out.bits.ecn, cc_fifo.io.out.bits.vaddr, cc_fifo.io.out.bits.msg_length, cc_fifo.io.out.bits.pkg_length, cc_fifo.io.out.bits.user_define)
@@ -66,7 +66,7 @@ class HandleTx() extends Module{
 					io.priori_meta_out.valid			:= 1.U
 					io.priori_meta_out.bits.event_gen(cc_fifo.io.out.bits.op_code, cc_fifo.io.out.bits.qpn, cc_fifo.io.out.bits.psn, cc_fifo.io.out.bits.ecn, cc_fifo.io.out.bits.vaddr, cc_fifo.io.out.bits.msg_length, cc_fifo.io.out.bits.pkg_length, cc_fifo.io.out.bits.user_define)
 				}
-			}.elsewhen(pkg_fifo.io.out.fire()){
+			}.elsewhen(pkg_fifo.io.out.fire){
 				pkg_meta							:= pkg_fifo.io.out.bits
 				when(PKG_JUDGE.WRITE_PKG(pkg_fifo.io.out.bits.op_code)){
 					io.priori_meta_out.valid		:= 1.U
@@ -86,7 +86,7 @@ class HandleTx() extends Module{
 						io.event_meta_out.bits.remote_event(IB_OPCODE.RC_READ_RESP_ONLY, pkg_fifo.io.out.bits.qpn, pkg_fifo.io.out.bits.psn, pkg_fifo.io.out.bits.vaddr, pkg_fifo.io.out.bits.msg_length) 
 					}					
 				}
-			}.elsewhen(app_fifo.io.out.fire()){
+			}.elsewhen(app_fifo.io.out.fire){
 				app_meta	                        <> app_fifo.io.out.bits
 				when(app_fifo.io.out.bits.rdma_cmd === APP_OP_CODE.APP_READ){
                     state	                        := sIDLE

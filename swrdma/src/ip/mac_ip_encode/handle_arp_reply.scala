@@ -42,7 +42,7 @@ class handle_arp_reply extends Module{
 
 	switch(state){
 		is(sIDLE){
-			when(data_fifo.io.out.fire() & arp_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire & arp_fifo.io.out.fire){
                 hit                             := arp_fifo.io.out.bits.hit
                 io.ethheaderout.bits            := Cat(Cat(temp, io.mymac),arp_fifo.io.out.bits.mac_addr)
                 io.data_out.bits                <> data_fifo.io.out.bits
@@ -64,7 +64,7 @@ class handle_arp_reply extends Module{
 			}
 		}
 		is(sPAYLOAD){
-            when(data_fifo.io.out.fire()){
+            when(data_fifo.io.out.fire){
                 io.data_out.bits                <> data_fifo.io.out.bits
                 when(hit === 1.U){
                     io.data_out.valid           := 1.U

@@ -49,16 +49,16 @@ class arp_table extends Module{
 
 	val sIDLE :: sARP1 :: sARP2 :: Nil = Enum(3)
 	val state                   = RegInit(sIDLE)
-    when(io.arpinsert.fire()){
+    when(io.arpinsert.fire){
         arp_table.io.data_in_a  := io.arpinsert.bits
         arp_table.io.wr_en_a    := 1.U
         arp_table.io.addr_a     := io.arpinsert.bits(31,24)
         state                   := sIDLE
-    }.elsewhen(io.arp_req1.fire()){
+    }.elsewhen(io.arp_req1.fire){
         arp_table.io.addr_b     := io.arp_req1.bits(31,24)
         state                   := sARP1
         temp                    := io.arp_req1.bits(31,0)
-    }.elsewhen(io.arp_req2.fire()){
+    }.elsewhen(io.arp_req2.fire){
         arp_table.io.addr_b     := io.arp_req2.bits(31,24)
         state                   := sARP2
         temp                    := io.arp_req2.bits(31,0)

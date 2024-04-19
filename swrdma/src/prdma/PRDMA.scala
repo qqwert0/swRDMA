@@ -33,6 +33,8 @@ class PRDMA() extends Module{
         val cc_init	            = Flipped(Decoupled(new CC_init()))
 
         val local_ip_address    = Input(UInt(32.W))
+        val cpu_started         = Input(Bool())
+        val axi                 = Vec(2,(new AXI(33, 256, 6, 0, 4)))
 	})
 
 
@@ -174,6 +176,8 @@ class PRDMA() extends Module{
     rx_cc.io.cc_state_in                    <> cc_table.io.cc2rx_rsp
     rx_cc.io.cc_req                         <> rx_cc_req_arbiter.io.in(1)
     rx_cc.io.cc_meta_out                    <> handle_tx.io.cc_meta_in
+    rx_cc.io.cpu_started                    := io.cpu_started
+    rx_cc.io.axi                            <> io.axi(0)
 
 
 	handle_tx.io.app_meta_in                <> io.s_tx_meta	        				
@@ -188,6 +192,8 @@ class PRDMA() extends Module{
     tx_cc.io.cc_state_in                    <> cc_table.io.cc2tx_rsp
     tx_cc.io.cc_req                         <> tx_cc_req_arbiter.io.in(1)
     tx_cc.io.cc_meta_out                    <> tx_event_arbiter.io.in(1)
+    tx_cc.io.cpu_started                    := io.cpu_started
+    tx_cc.io.axi                            <> io.axi(1)
 
 	tx_dispatch.io.meta_in	                <> tx_event_arbiter.io.out   	
 	tx_dispatch.io.conn_req 			    <> conn_table.io.tx2conn_req	

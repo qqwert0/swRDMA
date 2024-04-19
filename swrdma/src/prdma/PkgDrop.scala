@@ -37,7 +37,7 @@ class PkgDrop() extends Module{
 
 	switch(state){
 		is(sIDLE){
-			when(meta_fifo.io.out.fire() & rx_data_fifo.io.out.fire()){
+			when(meta_fifo.io.out.fire & rx_data_fifo.io.out.fire){
 				when(meta_fifo.io.out.bits.is_drop){
                     when(rx_data_fifo.io.out.bits.last === 1.U){
                         state	:= sIDLE
@@ -56,7 +56,7 @@ class PkgDrop() extends Module{
 			}
 		}
 		is(sDROP){
-			when(rx_data_fifo.io.out.fire()){
+			when(rx_data_fifo.io.out.fire){
                 when(rx_data_fifo.io.out.bits.last === 1.U){
                     state	:= sIDLE
                 }.otherwise{
@@ -65,7 +65,7 @@ class PkgDrop() extends Module{
 			}
 		}
 		is(sFWD){
-			when(rx_data_fifo.io.out.fire()){
+			when(rx_data_fifo.io.out.fire){
                 io.rx_data_out.valid    := 1.U
                 io.rx_data_out.bits     <> rx_data_fifo.io.out.bits
                 when(rx_data_fifo.io.out.bits.last === 1.U){

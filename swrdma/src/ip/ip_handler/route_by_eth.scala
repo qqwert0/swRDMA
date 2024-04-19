@@ -27,7 +27,7 @@ class route_by_eth extends Module{
     val type1 = RegInit(UInt(16.W), 0.U)
     val last = RegInit(UInt(1.W), 1.U)
     
-    when(io.data_in.fire()){
+    when(io.data_in.fire){
         when(last === 1.U){
             type1 := io.etherType
             last  := 0.U

@@ -224,7 +224,7 @@ class Frame_Padding_512 extends Module{
 
 	switch(state){
 		is(sIDLE){
-			when(io.data_in.fire()){
+			when(io.data_in.fire){
 				io.data_out.valid		:= 1.U
 				io.data_out.bits 		:= io.data_in.bits
                 io.data_out.bits.keep   := "hffffffffffffffff".U
@@ -236,7 +236,7 @@ class Frame_Padding_512 extends Module{
 			}
 		}
 		is(sREAD_DATA){
-			when(io.data_in.fire()){
+			when(io.data_in.fire){
 				io.data_out.valid		:= 1.U
 				io.data_out.bits 		:= io.data_in.bits
 				when(io.data_in.bits.last === 1.U){

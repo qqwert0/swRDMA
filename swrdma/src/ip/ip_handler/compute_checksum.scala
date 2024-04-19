@@ -30,7 +30,7 @@ class compute_checksum extends Module{
     // cics_iplen          := 0.U
     
 
-    // when(io.data_in.fire()){
+    // when(io.data_in.fire){
     //     when(last === 1.U){
             
     //         last            := 0.U

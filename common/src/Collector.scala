@@ -167,7 +167,7 @@ object Collector{
 
 	def fire(data:DecoupledIO[Data],msg:String="") = {
 		val counter 	= RegInit(UInt(32.W),0.U)
-		when(data.fire()){
+		when(data.fire){
 			counter		:= counter+1.U
 		}
 		add_signal(counter,data.valid,msg,"[fire]")
@@ -175,7 +175,7 @@ object Collector{
 
 	def fireLast(data:DecoupledIO[HasLast],msg:String="") = {
 		val counter 	= RegInit(UInt(32.W),0.U)
-		when(data.fire()&data.bits.last.asBool()){
+		when(data.fire&data.bits.last.asBool()){
 			counter		:= counter+1.U
 		}
 		add_signal(counter,data.valid,msg,"[fireLast]")

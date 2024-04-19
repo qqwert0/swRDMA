@@ -50,11 +50,11 @@ class H2CLatency() extends Module{
 	}
 
 	when(io.start === 1.U){
-		when(io.h2c_cmd.fire() && (io.h2c_data.fire()&&io.h2c_data.bits.last)){
+		when(io.h2c_cmd.fire && (io.h2c_data.fire&&io.h2c_data.bits.last)){
 			count_latency	:= count_latency
-		}.elsewhen(io.h2c_cmd.fire()){
+		}.elsewhen(io.h2c_cmd.fire){
 			count_latency	:= count_latency - count_time
-		}.elsewhen(io.h2c_data.fire()&&io.h2c_data.bits.last){
+		}.elsewhen(io.h2c_data.fire&&io.h2c_data.bits.last){
 			count_latency	:= count_latency + count_time
 		}.otherwise{
 			count_latency	:= count_latency
@@ -91,7 +91,7 @@ class H2CLatency() extends Module{
 			offset_verify		:= 0.U
 		}
 		is(sSEND){
-			when(io.h2c_cmd.fire()){
+			when(io.h2c_cmd.fire){
 				state_cmd		:= sWAIT
 			}
 			count_wait			:= 0.U
@@ -116,12 +116,12 @@ class H2CLatency() extends Module{
 	io.h2c_cmd.valid	:= state_cmd === sSEND
 	io.h2c_data.ready	:= 1.U
 
-	when(io.h2c_cmd.fire()){
+	when(io.h2c_cmd.fire){
 		offset_addr		:= offset_addr + io.burst_length
 		count_send_cmd	:= count_send_cmd + 1.U
 	}
 
-	when(io.h2c_data.fire()){
+	when(io.h2c_data.fire){
 		count_total_words	:= count_total_words + 1.U
 		offset_verify		:= offset_verify + 64.U
 		when(io.h2c_data.bits.data === offset_verify){

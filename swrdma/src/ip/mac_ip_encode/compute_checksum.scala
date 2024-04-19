@@ -34,7 +34,7 @@ class compute_checksum1 extends Module{
     ToZero(io.checksum.valid)
     ToZero(io.checksum.bits)
 
-    when(io.data_in.fire()){
+    when(io.data_in.fire){
         io.data_out.valid   := 1.U 
         io.data_out.bits    := io.data_in.bits
         when(last === 1.U){

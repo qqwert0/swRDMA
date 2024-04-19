@@ -43,7 +43,7 @@ class VaddrTable() extends Module{
 
     switch(state){
         is(sIDLE){
-            when(vaddr_rx_fifo.io.out.fire()){
+            when(vaddr_rx_fifo.io.out.fire){
                 vaddr_request                            := vaddr_rx_fifo.io.out.bits
                 when(vaddr_rx_fifo.io.out.bits.is_wr){
                     vaddr_table.io.addr_a                    := vaddr_rx_fifo.io.out.bits.qpn

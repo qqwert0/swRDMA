@@ -53,7 +53,7 @@ object XArbiter{
 		}
 		val out = Wire(Decoupled(gen))
 
-		val grant_index		= GrantIndex(Cat(in.map(_.valid).reverse), out.fire())
+		val grant_index		= GrantIndex(Cat(in.map(_.valid).reverse), out.fire)
 
 		out.valid			:= 0.U
 		out.bits			:= in(0).bits
@@ -91,7 +91,7 @@ object SerialArbiter{
 		}
 		val out = Wire(Decoupled(gen))
 
-		val grant_index		= GrantIndex(Cat(in.map(_.valid).reverse), out.fire() && out.bits.last===1.U)
+		val grant_index		= GrantIndex(Cat(in.map(_.valid).reverse), out.fire && out.bits.last===1.U)
 
 		val is_head 		= RegInit(UInt(1.W),1.U)
 		val idx				= Wire(UInt(log2Up(n).W))
@@ -113,13 +113,13 @@ object SerialArbiter{
 				out.bits 		:= in(i).bits
 			}
 		}
-		when(out.fire() && out.bits.last===1.U){
+		when(out.fire && out.bits.last===1.U){
 			is_head	:= 1.U
-		}.elsewhen(out.fire()){
+		}.elsewhen(out.fire){
 			is_head := 0.U
 		}
 
-		when(out.fire()){
+		when(out.fire){
 			last_idx		:= idx
 		}
 		io.out	<> RegSlice(out)
@@ -155,7 +155,7 @@ object CompositeArbiter{
 		val out_meta = Wire(Decoupled(genMeta))
 		val out_data = Wire(Decoupled(genData))
 
-		val grant_index		= GrantIndex(Cat(in_meta.map(_.valid).reverse), out_data.fire()&&out_data.bits.last===1.U)
+		val grant_index		= GrantIndex(Cat(in_meta.map(_.valid).reverse), out_data.fire&&out_data.bits.last===1.U)
 		
 		val last_idx		= RegInit(UInt(log2Up(n).W),0.U)
 
@@ -164,7 +164,7 @@ object CompositeArbiter{
 		switch(state){
 			is(sFirst){
 				last_idx		:= grant_index
-				when(out_meta.fire()){
+				when(out_meta.fire){
 					when(out_data.fire && out_data.bits.last===1.U){
 						state 		:= sFirst
 					}.otherwise{
@@ -173,7 +173,7 @@ object CompositeArbiter{
 				}
 			}
 			is(sMiddle){
-				when(out_data.fire() && out_data.bits.last===1.U){
+				when(out_data.fire && out_data.bits.last===1.U){
 					state		:= sFirst
 				}
 			}
@@ -191,8 +191,8 @@ object CompositeArbiter{
 				out_meta.valid		:= in_meta(i).valid
 				out_meta.bits		:= in_meta(i).bits
 
-				in_data(i).ready	:= out_data.ready & out_meta.fire()
-				out_data.valid		:= in_data(i).valid & out_meta.fire()
+				in_data(i).ready	:= out_data.ready & out_meta.fire
+				out_data.valid		:= in_data(i).valid & out_meta.fire
 				out_data.bits		:= in_data(i).bits
 			}.elsewhen(state===sMiddle && last_idx === i.U){
 				in_data(i).ready	:= out_data.ready

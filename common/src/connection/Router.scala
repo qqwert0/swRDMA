@@ -77,9 +77,9 @@ object SerialRouter{
 		val is_head 		= RegInit(UInt(1.W),1.U)
 		val idx				= RegInit(UInt(log2Up(n).W),0.U)
 
-		when(in.fire() && in.bits.genbits.last===1.U){
+		when(in.fire && in.bits.genbits.last===1.U){
 			is_head		:= 1.U
-		}.elsewhen(in.fire()){
+		}.elsewhen(in.fire){
 			is_head		:= 0.U
 		}
 
@@ -144,8 +144,8 @@ object CompositeRouter{
 		switch(state){
 			is(sFirst){
 				last_idx		:= in_meta.bits.idx
-				when(in_meta.fire()){
-					when(in_data.fire() && in_data.bits.last===1.U){
+				when(in_meta.fire){
+					when(in_data.fire && in_data.bits.last===1.U){
 						state	:= sFirst
 					}.otherwise{
 						state	:= sMiddle
@@ -153,7 +153,7 @@ object CompositeRouter{
 				}
 			}
 			is(sMiddle){
-				when(in_data.fire() && in_data.bits.last===1.U){
+				when(in_data.fire && in_data.bits.last===1.U){
 					state		:= sFirst
 				}
 			}
@@ -169,8 +169,8 @@ object CompositeRouter{
 				out_meta(i).valid	:= in_meta.valid
 				in_meta.ready 		:= out_meta(i).ready
 
-				out_data(i).valid	:= in_data.valid & in_meta.fire()
-				in_data.ready		:= out_data(i).ready & in_meta.fire()
+				out_data(i).valid	:= in_data.valid & in_meta.fire
+				in_data.ready		:= out_data(i).ready & in_meta.fire
 			}.elsewhen(state===sMiddle && last_idx===i.U){
 				out_data(i).valid	:= in_data.valid
 				in_data.ready		:= out_data(i).ready

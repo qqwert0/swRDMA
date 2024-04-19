@@ -66,7 +66,7 @@ class PkgGen2 extends Module{
 	var data_cnt = RegInit(0.U(32.W))
 	val data_total = 14.U(32.W)
 	
-	when((state === fsm_write2)&io.data_out.fire()){
+	when((state === fsm_write2)&io.data_out.fire){
 		pkg_cnt				:= pkg_cnt + 1.U
 	}.elsewhen(io.start === 0.U){
 		pkg_cnt				:= 0.U
@@ -100,7 +100,7 @@ class PkgGen2 extends Module{
 			}
 		}
 		is(fsm_write0){
-			when(io.data_out.fire()){
+			when(io.data_out.fire){
 				state:=fsm_write1
 			}
 			.otherwise{
@@ -108,7 +108,7 @@ class PkgGen2 extends Module{
 			}
 		}
 		is(fsm_write1){
-			when(io.data_out.fire()&&(data_cnt===data_total)){
+			when(io.data_out.fire&&(data_cnt===data_total)){
 				state:=fsm_write2
 			}
 			.otherwise{
@@ -116,11 +116,11 @@ class PkgGen2 extends Module{
 			}
 		}
 		is(fsm_write2){
-			when(io.data_out.fire() && (pkg_num === 0.U)){
+			when(io.data_out.fire && (pkg_num === 0.U)){
 				state:=fsm_idle
-			}.elsewhen(io.data_out.fire() && (pkg_cnt < (pkg_num - 1.U))){
+			}.elsewhen(io.data_out.fire && (pkg_cnt < (pkg_num - 1.U))){
 				state:=fsm_idle
-			}.elsewhen(io.data_out.fire()){
+			}.elsewhen(io.data_out.fire){
 				state:=fsm_stop
 			}.otherwise{
 				state:=fsm_write2
@@ -134,7 +134,7 @@ class PkgGen2 extends Module{
 		idle_cnt:=0.U
 	}
 
-	when((state===fsm_write0||state===fsm_write1)&&io.data_out.fire()){
+	when((state===fsm_write0||state===fsm_write1)&&io.data_out.fire){
 		data_cnt:=data_cnt+1.U
 	}.elsewhen(state===fsm_write2){
 		data_cnt:=0.U

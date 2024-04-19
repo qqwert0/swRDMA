@@ -23,7 +23,7 @@ class ex_ipaddress extends Module{
     io.arptableout.valid:= 0.U//io.data_in.valid
 
     io.arptableout.bits:= arp_out
-    when(io.data_in.fire()){
+    when(io.data_in.fire){
         when(last === 1.U){
             when((io.data_in.bits.data(159,128) & io.regsubnetmask) === (io.regdefaultgateway & io.regsubnetmask)){
                 io.arptableout.bits := io.data_in.bits.data(159,128)

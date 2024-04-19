@@ -28,7 +28,7 @@ class Schedule() extends Module{
 	ToZero(io.event_meta_out.bits)
 
 
-	when(meta_fifo.io.out.fire()){
+	when(meta_fifo.io.out.fire){
 		io.cc_req.valid					:= 1.U
 		io.cc_req.bits.qpn				:= meta_fifo.io.out.bits.qpn
 		io.cc_req.bits.is_wr			:= false.B

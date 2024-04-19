@@ -77,24 +77,24 @@ class MULTI_Q[T<:Data](val gen:T, val queue_num:Int, val entries:Int) extends Mo
     front_fifo.io.deq.ready     := (state === sIDLE) & free_list.io.out.valid & front_fifo.io.deq.valid & (!push_fifo.io.deq.valid )
     free_list.io.out.ready      := (state === sIDLE) & free_list.io.out.valid & (push_fifo.io.deq.valid | front_fifo.io.deq.valid)
 
-    io.pop_req.ready            := (state === sIDLE) & !((push_fifo.io.deq.fire() | front_fifo.io.deq.fire()) & free_list.io.out.fire())
+    io.pop_req.ready            := (state === sIDLE) & !((push_fifo.io.deq.fire | front_fifo.io.deq.fire) & free_list.io.out.fire)
 
     io.pop_rsp.valid            := 0.U
     io.pop_rsp.bits             := 0.U.asTypeOf(io.pop_rsp.bits)
 	
 	switch(state){
 		is(sIDLE){
-			when(push_fifo.io.deq.fire() & free_list.io.out.fire()){
+			when(push_fifo.io.deq.fire & free_list.io.out.fire){
                 new_entry_index             := free_list.io.out.bits
                 q_push_temp                 <> push_fifo.io.deq.bits                
                 point_table.io.addr_b       := push_fifo.io.deq.bits.q_index
                 state                       := sPUSH0
-			}.elsewhen(front_fifo.io.deq.fire() & free_list.io.out.fire()){
+			}.elsewhen(front_fifo.io.deq.fire & free_list.io.out.fire){
                 new_entry_index             := free_list.io.out.bits
                 q_push_temp                 <> front_fifo.io.deq.bits                
                 point_table.io.addr_b       := front_fifo.io.deq.bits.q_index
                 state                       := sFRONT0
-			}.elsewhen(io.pop_req.fire()){
+			}.elsewhen(io.pop_req.fire){
                 point_table.io.addr_b       := io.pop_req.bits
                 q_pop_index                 <> io.pop_req.bits
                 state                       := sPOP0

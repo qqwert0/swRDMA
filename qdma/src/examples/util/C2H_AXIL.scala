@@ -60,7 +60,7 @@ class C2H_AXIL() extends Module {
     switch (c2hState) {
         is (sIDLE) {
             commandValid            := false.B
-            when ((countWords === io.totalWords - 1.U && io.c2hData.fire()) || countWords === 0.U) {
+            when ((countWords === io.totalWords - 1.U && io.c2hData.fire) || countWords === 0.U) {
                 dataValid           := false.B
             }.otherwise {
                 dataValid           := true.B
@@ -78,7 +78,7 @@ class C2H_AXIL() extends Module {
             commandValid    := true.B
             dataValid       := true.B
             countTime       := countTime + 1.U
-            when (start === 0.U && countCommand === io.totalCommands - 1.U && io.c2hCommand.fire()) {
+            when (start === 0.U && countCommand === io.totalCommands - 1.U && io.c2hCommand.fire) {
                 c2hState    := sIDLE
                 commandValid    := false.B
             }
@@ -89,7 +89,7 @@ class C2H_AXIL() extends Module {
     }
 
     // C2H Command Update
-    when (io.c2hCommand.fire()) {
+    when (io.c2hCommand.fire) {
         countCommand        := Mux(
             countCommand =/= io.totalCommands - 1.U,
             countCommand + 1.U,
@@ -104,7 +104,7 @@ class C2H_AXIL() extends Module {
     }
 
     // C2H Data Update
-    when (io.c2hData.fire()) {
+    when (io.c2hData.fire) {
         countWords           := Mux(
             countWords =/= io.totalWords - 1.U,
             countWords + 1.U,

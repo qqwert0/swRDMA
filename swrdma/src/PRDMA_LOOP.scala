@@ -61,7 +61,9 @@ class PRDMA_LOOP() extends Module{
         io.m_mem_read_cmd(i)            <> roce(i).io.m_mem_read_cmd 
         io.s_mem_read_data(i)           <> roce(i).io.s_mem_read_data 
         io.m_mem_write_cmd(i)           <> roce(i).io.m_mem_write_cmd 
-        io.m_mem_write_data(i)          <> roce(i).io.m_mem_write_data    
+        io.m_mem_write_data(i)          <> roce(i).io.m_mem_write_data   
+        roce(i).io.cpu_started          := true.B 
+        roce(i).io.axi                  <> DontCare
         // io.s_send_data(i)               <> roce(i).io.s_send_data     
         // io.m_recv_data(i)               <> roce(i).io.m_recv_data   
         // io.m_recv_meta(i)               <> roce(i).io.m_recv_meta   

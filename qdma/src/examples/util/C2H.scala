@@ -76,8 +76,8 @@ class C2H extends Module{
 	}
 
 	//state machine
-	val cmd_nearly_done = io.c2h_cmd.fire() && (count_send_cmd + 1.U === io.total_cmds)
-	val data_nearly_done = io.c2h_data.fire() && (count_send_word + 1.U === io.total_words)
+	val cmd_nearly_done = io.c2h_cmd.fire && (count_send_cmd + 1.U === io.total_cmds)
+	val data_nearly_done = io.c2h_data.fire && (count_send_word + 1.U === io.total_words)
 
 	val sIDLE :: sSEND :: sDONE :: Nil = Enum(3)
 	val state_cmd			= RegInit(sIDLE)
@@ -129,7 +129,7 @@ class C2H extends Module{
 		}
 	}
 
-	when(io.c2h_cmd.fire()){
+	when(io.c2h_cmd.fire){
 		count_send_cmd		:= count_send_cmd + 1.U
 		q_addr_seq			:= q_addr_seq + io.length
 		
@@ -140,7 +140,7 @@ class C2H extends Module{
 		}
 	}
 
-	when(io.c2h_data.fire()){
+	when(io.c2h_data.fire){
 		count_send_word			:= count_send_word + 1.U
 		cur_value				:= cur_value + 1.U
 

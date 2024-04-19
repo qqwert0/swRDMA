@@ -1,29 +1,33 @@
 package swrdma
-import chisel3._
-import chisel3.util._
-import common.storage._
-import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage, ChiselOutputFileAnnotation}
-import firrtl.options.{TargetDirAnnotation, OutputAnnotationFileAnnotation}
-import firrtl.stage.OutputFileAnnotation
+
+import chisel3.stage.ChiselGeneratorAnnotation
+import chisel3.stage.ChiselStage
+import firrtl.options.TargetDirAnnotation
+import mini.foo._
+import mini.core._
+import mini.junctions._
 
 object elaborate extends App {
-	println("Generating a %s class".format(args(0)))
-	val stage	= new chisel3.stage.ChiselStage
-	val arr		= Array("-X", "sverilog", "--full-stacktrace")
-	val dir 	= TargetDirAnnotation("Verilog")
-
-	args(0) match{
-		//case "PkgGen" => stage.execute(arr, Seq(ChiselGeneratorAnnotation(() => new PkgGen()), dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
-		case "Foo" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new Foo()),dir))
-		case "PkgGen" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PkgGen()),dir))
-		case "PkgDelay" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PkgDelay()),dir))
-		case "PkgProc" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PkgProc()),dir))
-		case "PRDMA" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PRDMA()),dir))
-		case "PRDMA_LOOP" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new PRDMA_LOOP()),dir))
-		case "microbenchmark_recv" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new microbenchmark_recv()),dir))
-		case "microbenchmark_sender" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new microbenchmark_sender()),dir))
-		case "sender_reconfigable" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new sender_reconfigable()),dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
-		case "sender_reconfigable2" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new sender_reconfigable2()),dir, OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
-		case _ => println("Module match failed!")
-	}
+  val targetDirectory = "Verilog"
+  val dir 	= TargetDirAnnotation("Verilog")
+  val config = MiniConfig()
+  args(0) match{
+    case "test_csr" => (new ChiselStage()).emitSystemVerilog(
+        new test_csr(),
+        Array("--target-dir", "Verilog", "--full-stacktrace", "--output-annotation-file", "Foo.sv")
+      )
+		case "PRDMA_LOOP" => (new ChiselStage()).emitSystemVerilog(
+        new PRDMA_LOOP(),
+        Array("--target-dir", "Verilog", "--full-stacktrace", "--output-annotation-file", "Foo.sv")
+      )
+		case "mini" => (new ChiselStage()).emitSystemVerilog(
+        new Tile(
+          coreParams = config.core,
+          bramParams = config.bram,
+          nastiParams = config.nasti,
+          cacheParams = config.cache
+        ),
+        Array("--target-dir", "Verilog", "--full-stacktrace"),
+      )
+  }
 }

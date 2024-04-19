@@ -42,21 +42,21 @@ class HeadAdd() extends Module{
 	val state = RegInit(s_meta)
 	switch(state){
 		is(s_meta){
-			when(meta_fifo.io.out.fire() && conn_fifo.io.out.fire()){
+			when(meta_fifo.io.out.fire && conn_fifo.io.out.fire){
 				state := s_head
 			}.otherwise{
 				state := s_meta
 			}
 		}
 		is(s_head){
-			when(io.tx_data_out.fire() && io.tx_data_out.bits.last =/= 1.U ){
+			when(io.tx_data_out.fire && io.tx_data_out.bits.last =/= 1.U ){
 				state := s_payload
 			}.otherwise{
 				state := s_meta
 			}
 		}
 		is(s_payload){
-			when(io.tx_data_out.fire()&& io.tx_data_out.bits.last === 1.U){
+			when(io.tx_data_out.fire&& io.tx_data_out.bits.last === 1.U){
 				state := s_meta
 			}.otherwise{
 				state := s_payload

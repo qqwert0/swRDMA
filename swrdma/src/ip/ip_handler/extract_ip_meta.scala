@@ -26,7 +26,7 @@ class extract_ip_meta extends Module{
     myip_tmp        := io.data_in.bits.data(159,128)
     io.ipv4Type     := type1
     io.validipaddr  := addvalid
-    when(io.data_in.fire()){
+    when(io.data_in.fire){
         when(last === 1.U){
             last            := 0.U
             type1           := io.data_in.bits.data(79,72)

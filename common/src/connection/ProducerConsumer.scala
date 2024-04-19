@@ -45,7 +45,7 @@ class ProducerConsumer[T<:Data](val gen:T, val n:Int) extends Module{
     val in              = RegSlice(io.in)
     val out             = Wire(Vec(n,Decoupled(gen)))
 
-	val grant_index		= GrantIndex(Cat(out.map(_.ready).reverse), in.fire())
+	val grant_index		= GrantIndex(Cat(out.map(_.ready).reverse), in.fire)
 
     in.ready            := 0.U
     for(i<-0 until n){

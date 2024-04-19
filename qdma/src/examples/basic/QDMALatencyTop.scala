@@ -61,7 +61,7 @@ class QDMALatencyTop extends RawModule{
 
 	withClockAndReset(qdma.io.user_clk,!qdma.io.user_arstn){
 		val count_w_fire = RegInit(0.U(32.W))
-		when(qdma.io.axib.w.fire()){
+		when(qdma.io.axib.w.fire){
 			count_w_fire	:= count_w_fire+1.U
 		}
 		qdma.io.reg_status(0)	:= count_w_fire
@@ -103,7 +103,7 @@ class QDMALatencyTop extends RawModule{
 	c2h.io.wait_cycles			:= control_reg(207)
 	c2h.io.pfch_tag				:= control_reg(209)
 	c2h.io.tag_index			:= control_reg(210)
-	c2h.io.ack_fire				:= axi_slave.io.axi.w.fire()
+	c2h.io.ack_fire				:= axi_slave.io.axi.w.fire
 	
 	c2h.io.count_send_cmd		<> status_reg(200)
 	c2h.io.count_send_word		<> status_reg(201)

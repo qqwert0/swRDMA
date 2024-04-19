@@ -28,13 +28,13 @@ class generate_arp_pkg extends Module{
     val temp3                = Wire(UInt(32.W))
     temp                    := 0.U
     temp2                   := 0.U
-    val data_out            = new arp_in()
+    val data_out            = Wire(new arp_in())
     io.data_out.bits.data   := Cat(temp3,temp2,data_out.asTypeOf(UInt(336.W)))
     io.data_out.bits.last   := 1.U
     io.data_out.valid       := 0.U
     io.data_out.bits.keep   := Cat(temp,0x003f.U,0xffff.U, 0xffff.U)
     
-    when(io.replymeta.fire()){
+    when(io.replymeta.fire){
         io.data_out.valid           := 1.U
         io.requestmeta.ready        := 0.U
         io.data_out.bits.last       := 1.U
@@ -52,7 +52,7 @@ class generate_arp_pkg extends Module{
         data_out.Tar_hardware_addr  := io.replymeta.bits(79,32)
         data_out.Tar_protocol_addr  := io.replymeta.bits(31,0)
         temp3                       := 0.U//0x08b1fc58.U//0.U
-    }.elsewhen(io.requestmeta.fire()){
+    }.elsewhen(io.requestmeta.fire){
         io.data_out.valid := 1.U
         io.data_out.bits.last  := 1.U
         io.data_out.bits.keep  := Cat(temp,0x003f.U,0xffff.U, 0xffff.U)

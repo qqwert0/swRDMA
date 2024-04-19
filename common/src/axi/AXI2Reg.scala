@@ -52,7 +52,7 @@ class AXI2Reg[T<:AXI](private val gen:T, depth:Int, width:Int) extends Module{
 		q_w.io.out.ready := 1.U
 	}
 
-	when(q_w.io.out.fire()){
+	when(q_w.io.out.fire){
 		offset_w	:= offset_w+1.U
 		when(q_w.io.out.bits.last.asBool()){
 			offset_w	:= 0.U
@@ -77,7 +77,7 @@ class AXI2Reg[T<:AXI](private val gen:T, depth:Int, width:Int) extends Module{
 		q_r.io.upStream.valid := 1.U
 	}
 	val is_last = offset_r===q_ar.bits.len
-	when(q_r.io.upStream.fire()){
+	when(q_r.io.upStream.fire){
 		offset_r	:= offset_r+1.U
 		when(is_last){
 			offset_r					:= 0.U

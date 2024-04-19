@@ -75,7 +75,7 @@ class H2C() extends Module{
 	val sIDLE :: sSEND_CMD :: sDONE :: Nil = Enum(3)//must lower case for first letter!!!
 	val state_cmd			= RegInit(sIDLE)
 
-	val cmd_nearly_done = io.h2c_cmd.fire() && (send_cmd_count + 1.U === io.total_cmds)
+	val cmd_nearly_done = io.h2c_cmd.fire && (send_cmd_count + 1.U === io.total_cmds)
 
 	for(i <- 0 until MAX_Q){
 		q_value_max(i)			:= io.offset + i.U + io.range_words
@@ -127,7 +127,7 @@ class H2C() extends Module{
 		}
 	}
 
-	when(io.h2c_cmd.fire()){
+	when(io.h2c_cmd.fire){
 		send_cmd_count	:= send_cmd_count + 1.U
 		q_addr_seq		:= q_addr_seq + io.length
 
@@ -153,7 +153,7 @@ class H2C() extends Module{
 		}
 	}
 
-	when(io.h2c_data.fire()){
+	when(io.h2c_data.fire){
 		cur_word							:= cur_word + 1.U
 		count_word(data_bits.tuser_qid)		:= count_word(data_bits.tuser_qid) + 1.U
 		q_value_seq							:= q_value_seq + 1.U

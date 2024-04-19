@@ -51,12 +51,12 @@ class CONN_TABLE() extends Module{
 
     switch(state){
         is(sIDLE){
-            when(io.conn_init.fire()){
+            when(io.conn_init.fire){
                 conn_table.io.addr_a                    := io.conn_init.bits.qpn
                 conn_table.io.wr_en_a                   := 1.U
                 conn_table.io.data_in_a                 := io.conn_init.bits.conn_state
                 state                                   := sIDLE        
-            }.elsewhen(conn_tx_fifo.io.out.fire()){
+            }.elsewhen(conn_tx_fifo.io.out.fire){
                 conn_request                            := conn_tx_fifo.io.out.bits
                 when(conn_tx_fifo.io.out.bits.is_wr){
                     conn_table.io.addr_a                    := conn_tx_fifo.io.out.bits.qpn
@@ -67,7 +67,7 @@ class CONN_TABLE() extends Module{
                     conn_table.io.addr_b             := conn_tx_fifo.io.out.bits.qpn
                     state                            := sTXRSP
                 }
-            }.elsewhen(conn_rx_fifo.io.out.fire()){
+            }.elsewhen(conn_rx_fifo.io.out.fire){
                 conn_request                            := conn_rx_fifo.io.out.bits
                 when(conn_rx_fifo.io.out.bits.is_wr){
                     conn_table.io.addr_a                    := conn_rx_fifo.io.out.bits.qpn

@@ -50,7 +50,7 @@ class UserAdd() extends Module{
 	
 	switch(state){
 		is(sIDLE){
-			when(meta_fifo.io.out.fire()){
+			when(meta_fifo.io.out.fire){
 				io.meta_out.valid						:= 1.U
 				io.meta_out.bits						:= meta_fifo.io.out.bits
 				when(PKG_JUDGE.RETH_PKG(meta_fifo.io.out.bits.op_code)){
@@ -64,7 +64,7 @@ class UserAdd() extends Module{
 			}
 		}
 		is(sRETH){
-			when(data_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire){
 				io.reth_data_out.valid            := 1.U
 				when(pkg_len === 0.U){
 					io.reth_data_out.bits.data        := data_fifo.io.out.bits.data
@@ -91,7 +91,7 @@ class UserAdd() extends Module{
 			}
 		}
 		is(sAETH){
-			when(data_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire){
 				io.aeth_data_out.valid            := 1.U
 				when(pkg_len === 0.U){
 					io.aeth_data_out.bits.data        := data_fifo.io.out.bits.data
@@ -118,7 +118,7 @@ class UserAdd() extends Module{
 			}
 		}
 		is(sRAW){
-			when(data_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire){
 				io.raw_data_out.valid            := 1.U
 				when(pkg_len === 0.U){
 					io.raw_data_out.bits.data        := data_fifo.io.out.bits.data
@@ -145,7 +145,7 @@ class UserAdd() extends Module{
 			}
 		}		
 		is(sRETHDATA){
-			when(data_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire){
                 io.reth_data_out.valid            := 1.U
                 io.reth_data_out.bits             <> data_fifo.io.out.bits
 				when(data_fifo.io.out.bits.last === 1.U){
@@ -154,7 +154,7 @@ class UserAdd() extends Module{
 			}
 		}
 		is(sAETHDATA){
-			when(data_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire){
                 io.aeth_data_out.valid            := 1.U
                 io.aeth_data_out.bits             <> data_fifo.io.out.bits
 				when(data_fifo.io.out.bits.last === 1.U){
@@ -163,7 +163,7 @@ class UserAdd() extends Module{
 			}
 		}
 		is(sRAWDATA){
-			when(data_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire){
                 io.raw_data_out.valid            := 1.U
                 io.raw_data_out.bits             <> data_fifo.io.out.bits
 				when(data_fifo.io.out.bits.last === 1.U){

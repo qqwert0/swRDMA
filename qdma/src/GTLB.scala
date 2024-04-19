@@ -24,10 +24,10 @@ class GTLB extends Module with BaseTLB{
 	val tlb_table			=  XRam(UInt(64.W),entry_num)
 	
 	io.wr_tlb.ready			:= true.B//always high for write ram
-	tlb_table.io.wr_en_a	:= io.wr_tlb.fire()
+	tlb_table.io.wr_en_a	:= io.wr_tlb.fire
 	tlb_table.io.data_in_a	:= Cat(io.wr_tlb.bits.paddr_high, io.wr_tlb.bits.paddr_low)//paddr 127:64
 
-	when(io.wr_tlb.fire()){
+	when(io.wr_tlb.fire){
 		tlb_table.io.addr_a		:= wrtlb_index
 		wrtlb_index				:= wrtlb_index + 1.U
 		when(io.wr_tlb.bits.is_base===1.U){

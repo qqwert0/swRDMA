@@ -63,7 +63,7 @@ class QDMAThroughputCPUTop extends MultiIOModule {
 	val r_data = axi_slave.io.axi.r.bits.data(31,0)
 
     val count_w_fire = withClockAndReset(userClk, ~userRstn.asBool) {RegInit(0.U(32.W))}
-    when(qdma.io.axib.w.fire()){
+    when(qdma.io.axib.w.fire){
         count_w_fire	:= count_w_fire+1.U
     }
     qdma.io.reg_status(0)	:= count_w_fire

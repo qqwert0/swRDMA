@@ -61,11 +61,11 @@ class C2HEvaluator extends Module{
     val last_err_cnt        = RegInit(0.U(32.W))
     val data_cnt            = RegInit(0.U(32.W))
 
-    data_cnt                := record_signals(data_fifo.io.out.fire())
+    data_cnt                := record_signals(data_fifo.io.out.fire)
 
 	switch(state){
 		is(sIDLE){
-			when(data_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire){
                 length                  := data_fifo.io.out.bits.ctrl_len 
                 
                 
@@ -98,7 +98,7 @@ class C2HEvaluator extends Module{
 			}
 		}
 		is(sREAD_DATA){
-			when(data_fifo.io.out.fire()){
+			when(data_fifo.io.out.fire){
                 length_tmp              := length_tmp + 64.U
                 when((length_tmp + 64.U) === length){
                     length_tmp          := 0.U

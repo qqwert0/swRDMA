@@ -25,7 +25,7 @@ class ip_invalid_dropper extends Module{
     
     switch(state){
         is(0.U){
-            when(io.data_in.fire()){
+            when(io.data_in.fire){
                 when(io.validchecksum === 1.U && io.validipaddress === 1.U){
                     io.valid_out        := 1.U
                     valid_out           := 1.U
@@ -42,7 +42,7 @@ class ip_invalid_dropper extends Module{
             }
         }
         is(1.U){
-            when(io.data_in.fire()){
+            when(io.data_in.fire){
                 when(io.data_in.bits.last === 1.U){
                     state               := 0.U
                     valid_out           := 0.U

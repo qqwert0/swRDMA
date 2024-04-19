@@ -47,13 +47,13 @@ class PoorAXIL2Reg[T<:AXI](private val gen:T, depth:Int, width:Int) extends Modu
 	r								<> r_delay.io.downStream
 	switch(s_rd){
 		is(sIDLE){
-			when(ar.fire()){
+			when(ar.fire){
 				r_addr			:= ar.bits.addr >> shift.U
 				s_rd			:= sWORK
 			}
 		}
 		is(sWORK){
-			when(r_delay.io.upStream.fire()){
+			when(r_delay.io.upStream.fire){
 				s_rd			:= sIDLE
 			}
 		}
@@ -61,18 +61,18 @@ class PoorAXIL2Reg[T<:AXI](private val gen:T, depth:Int, width:Int) extends Modu
 
 	aw.ready	:= (s_wr === sIDLE)
 	w.ready		:= (s_wr === sWORK)
-	when(w.fire()){
+	when(w.fire){
 		reg_control(w_addr)	:= w.bits.data
 	}
 	switch(s_wr){
 		is(sIDLE){
-			when(aw.fire()){
+			when(aw.fire){
 				w_addr			:= aw.bits.addr >> shift.U
 				s_wr			:= sWORK
 			}
 		}
 		is(sWORK){
-			when(w.fire()){
+			when(w.fire){
 				s_wr			:= sIDLE
 			}
 		}

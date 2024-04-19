@@ -22,12 +22,12 @@ object GrantIndex{
 object Connection{
 	def one2many(one:DecoupledIO[Data]) (many:DecoupledIO[Data]*)	= {
 		one.ready	:= many.map(_.ready).reduce(_ & _)
-		many.map(t => t.valid := one.fire())
+		many.map(t => t.valid := one.fire)
 	}
 
 	def many2one(many:DecoupledIO[Data]*)(one:DecoupledIO[Data])	= {
 		one.valid	:= many.map(_.valid).reduce(_ & _)
-		many.map(t => t.ready := one.fire())
+		many.map(t => t.ready := one.fire)
 	}
 
 	def one2one(one:DecoupledIO[Data])(two:DecoupledIO[Data])		= {
@@ -71,11 +71,11 @@ class CreditQ(initCredit:Int=0, inStep:Int=1, outStep:Int=1) extends Module{
 	out.valid	:= cur_credit >= outStep.U
 	in.ready	:= cur_credit <= realMaxCredit-inStep.U 
 
-	when(out.fire() & in.fire()){
+	when(out.fire & in.fire){
 		cur_credit		:= cur_credit + inStep.U - outStep.U
-	}.elsewhen(out.fire()){
+	}.elsewhen(out.fire){
 		cur_credit		:= cur_credit - outStep.U
-	}.elsewhen(in.fire()){
+	}.elsewhen(in.fire){
 		cur_credit		:= cur_credit + inStep.U
 	}.otherwise{
 		cur_credit		:= cur_credit

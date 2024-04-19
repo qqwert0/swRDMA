@@ -51,7 +51,7 @@ class H2CRandom() extends Module{
 
 	//random generator
 	val fifo_random 		= XQueue(UInt(32.W), 64)
-	val gen_random_en 		= fifo_random.io.in.fire()
+	val gen_random_en 		= fifo_random.io.in.fire
 	val lfsr 				= LFSR(32,gen_random_en,Some(0x67893518))
 	fifo_random.io.in.valid	:= fifo_random.io.in.ready === 1.U && !reset.asUInt
 	fifo_random.io.in.bits 	:= lfsr
@@ -62,8 +62,8 @@ class H2CRandom() extends Module{
 	val fifo_verify_data 	= XQueue(UInt(32.W), 128)
 	val verify_offset		= RegInit(UInt(32.W),0.U)
 	fifo_verify_data.io.in.bits		:= align_to_1GB
-	fifo_verify_data.io.in.valid	:= fifo_random.io.out.fire()
-	fifo_verify_data.io.out.ready	:= io.h2c_data.fire() && io.h2c_data.bits.last
+	fifo_verify_data.io.in.valid	:= fifo_random.io.out.fire
+	fifo_verify_data.io.out.ready	:= io.h2c_data.fire && io.h2c_data.bits.last
 	
 	//h2c_cmd
 	val valid_cmd				= RegInit(Bool(),false.B)
@@ -76,9 +76,9 @@ class H2CRandom() extends Module{
 	io.h2c_cmd.bits.qid			:= cur_q
 	io.h2c_cmd.bits.addr		:= io.start_addr + align_to_1GB 
 	io.h2c_cmd.valid			:= valid_cmd & fifo_verify_data.io.in.ready //prevent data did not enter verify data
-	fifo_random.io.out.ready	:= io.h2c_cmd.fire()
+	fifo_random.io.out.ready	:= io.h2c_cmd.fire
 
-	when(io.h2c_cmd.fire()){
+	when(io.h2c_cmd.fire){
 		count_send_cmd			:= count_send_cmd + 1.U
 		when(cur_q+1.U === io.total_qs){
 			cur_q := 0.U
@@ -91,7 +91,7 @@ class H2CRandom() extends Module{
 	val sIDLE :: sSEND_CMD :: sDONE :: Nil = Enum(3)//must lower case for first letter!!!
 	val state_cmd			= RegInit(sIDLE)
 	
-	val cmd_nearly_done = io.h2c_cmd.fire() && (count_send_cmd + 1.U === io.total_cmds)
+	val cmd_nearly_done = io.h2c_cmd.fire && (count_send_cmd + 1.U === io.total_cmds)
 	val rising_start	= io.start===1.U & !RegNext(io.start===1.U)
 
 	switch(state_cmd){
@@ -122,7 +122,7 @@ class H2CRandom() extends Module{
 	}
 
 	io.h2c_data.ready				:= 1.U
-	when(io.h2c_data.fire()){
+	when(io.h2c_data.fire){
 		when(io.h2c_data.bits.last){
 			verify_offset		:= 0.U
 		}.otherwise{

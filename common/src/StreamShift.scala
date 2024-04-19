@@ -40,7 +40,7 @@ class LSHIFT(offset:Int, width:Int) extends Module{
 		fifo_data.io.in.bits.last := 1.U
 		fifo_data.io.in.valid := 1.U
 		write_reminder := 0.U		
-	}.elsewhen(io.in.fire()){
+	}.elsewhen(io.in.fire){
 		when(write_first === 1.U){
 			
 			for(i<- 0 until (width-(offset*8))){
@@ -114,7 +114,7 @@ class RSHIFT(offset:Int, width:Int) extends Module{
 		fifo_data.io.in.bits.last := 1.U
 		fifo_data.io.in.valid := 1.U
 		write_reminder := 0.U
-		when(io.in.fire()){
+		when(io.in.fire){
 			pre_word 	<> io.in.bits
 			write_first	:= 0.U
 			when(io.in.bits.last === 1.U){
@@ -122,7 +122,7 @@ class RSHIFT(offset:Int, width:Int) extends Module{
 				write_reminder := 1.U
 			}
 		}
-	}.elsewhen(io.in.fire()){
+	}.elsewhen(io.in.fire){
 		when(write_first === 1.U){
 			fifo_data.io.in.valid := 0.U
 		}.otherwise{

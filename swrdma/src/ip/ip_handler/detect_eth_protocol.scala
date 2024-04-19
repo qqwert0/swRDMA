@@ -19,7 +19,7 @@ class detect_eth_protocol extends Module{
     io.data_in.ready    := io.data_out.ready
 
     io.eth_protocol     := 0.U
-    when(io.data_in.fire()){
+    when(io.data_in.fire){
         when(last === 1.U){
             io.eth_protocol := io.data_in.bits.data(111,96)
             last            := 0.U
