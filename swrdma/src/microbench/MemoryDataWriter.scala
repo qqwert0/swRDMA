@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import common.storage._
+import common.axi._
 import common._
 import qdma._
 
@@ -23,11 +24,11 @@ class MemoryDataWriter extends Module {
         // Callback signals, which contains callback address to write.
         val callback    = Decoupled(UInt(64.W))
         // Input data stream.
-        val memData     = Flipped(Decoupled(UInt(512.W)))
+        val memData     = Flipped(Decoupled(AXIS(512)))
     })
 
     // Push parameter to C2H engine.
-    
+    val dataFifo2       = XQueue(AXIS(512), 512)
     object DataWState extends ChiselEnum {
         val sDataWIdle, sDataWReq, sDataWData, sDataWCbReq = Value
     }
@@ -99,9 +100,10 @@ class MemoryDataWriter extends Module {
 
     // Send C2H data.
     ToZero(io.c2hData.bits)
-    io.memData.ready            := io.c2hData.ready && (dataWSt === sDataWData)
-    io.c2hData.valid            := io.memData.valid && (dataWSt === sDataWData)
-    io.c2hData.bits.data        := io.memData.bits
+    io.memData                  <> dataFifo2.io.in
+    dataFifo2.io.out.ready            := io.c2hData.ready && (dataWSt === sDataWData)
+    io.c2hData.valid            := dataFifo2.io.out.valid && (dataWSt === sDataWData)
+    io.c2hData.bits.data        := dataFifo2.io.out.bits.data
     io.c2hData.bits.last        := dataLeftCount === 64.U
     io.c2hData.bits.mty         := 0.U
     io.c2hData.bits.ctrl_len    := curCmdLen

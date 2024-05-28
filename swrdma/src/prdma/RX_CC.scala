@@ -21,6 +21,7 @@ class RX_CC() extends Module{
 
         //
         val cpu_started     = Input(Bool())
+        val pkg_type_to_cc  = Output(UInt(32.W))
         val axi             = new AXI(33, 256, 6, 0, 4)
 
 	})
@@ -30,28 +31,30 @@ class RX_CC() extends Module{
 	val cpu_started = RegNext(io.cpu_started)
 	// riscv-mini
 	val config = MiniConfig()
-	val mini_core = withClockAndReset(clock, cpu_started.asBool) { 
+	val rx_core = withClockAndReset(clock, cpu_started.asBool) { 
 		Module(new Tile(
 		coreParams = config.core, 
 		bramParams = config.bram,
 		nastiParams = config.nasti, 
-		cacheParams = config.cache
+		cacheParams = config.cache,
+        file = "inst_rx.mem"
 		))
 	}
 
-    Collector.report(mini_core.io.rdma_print_addr)
-	Collector.report(mini_core.io.rdma_print_addr)
-	Collector.report(mini_core.io.rdma_print_string_num)
-	Collector.report(mini_core.io.rdma_print_string_len)
-	Collector.report(mini_core.io.rdma_trap)
+    Collector.report(rx_core.io.rdma_print_addr)
+	Collector.report(rx_core.io.rdma_print_addr)
+	Collector.report(rx_core.io.rdma_print_string_num)
+	Collector.report(rx_core.io.rdma_print_string_len)
+	Collector.report(rx_core.io.rdma_trap)
 
-	io.axi.aw <> mini_core.io.nasti.aw
-	io.axi.w <> mini_core.io.nasti.w
-	io.axi.ar <> mini_core.io.nasti.ar
-	io.axi.r <> mini_core.io.nasti.r
-	io.axi.b <> mini_core.io.nasti.b
+	io.axi.aw <> rx_core.io.nasti.aw
+	io.axi.w <> rx_core.io.nasti.w
+	io.axi.ar <> rx_core.io.nasti.ar
+	io.axi.r <> rx_core.io.nasti.r
+	io.axi.b <> rx_core.io.nasti.b
 
-	mini_core.io.host := DontCare
+	rx_core.io.host := DontCare
+    io.pkg_type_to_cc   := rx_core.io.pkg_type_to_cc
 
 
     /////////////////////////////////
@@ -65,18 +68,22 @@ class RX_CC() extends Module{
     // val csr = Module(new CSR())
 
     val meta_reg = RegInit(0.U.asTypeOf(new Pkg_meta()))
+    val cc_reg = RegInit(0.U.asTypeOf(new CC_state()))
 
-	val sIDLE :: sWAIT :: sDONE :: Nil = Enum(3)
+	val sIDLE :: sCC_STATE :: sWR_CORE :: sWAIT :: sDONE :: Nil = Enum(5)
 	val state                   = RegInit(sIDLE)
+    val pkg_meta_addr_base      = RegInit(0.U(5.W))
 
-    cc_meta_fifo.io.out.ready               := (state === sIDLE) & (mini_core.io.has_event_rd === 0.U) & (cc_state_fifo.io.out.valid)
-    cc_state_fifo.io.out.ready              := (state === sIDLE) & (mini_core.io.has_event_rd === 0.U) & (cc_meta_fifo.io.out.valid)
+    pkg_meta_addr_base          := rx_core.io.user_table_size
+
+    cc_meta_fifo.io.out.ready               := (state === sIDLE) & (io.cc_req.ready)
+    cc_state_fifo.io.out.ready              := (state === sCC_STATE) & (io.cc_req.ready)
 
     // ToZero(csr.io.cmd)
     // ToZero(csr.io.addr)
     // ToZero(csr.io.data_in)
-    ToZero(mini_core.io.has_event_wr)
-    ToZero(mini_core.io.user_csr_wr)
+    ToZero(rx_core.io.has_event_wr)
+    ToZero(rx_core.io.user_csr_wr)
     ToZero(io.cc_meta_out.valid)
     ToZero(io.cc_meta_out.bits)
     ToZero(io.cc_req.valid)
@@ -84,21 +91,42 @@ class RX_CC() extends Module{
 
     switch(state){
         is(sIDLE){
-            when((mini_core.io.has_event_rd === 0.U) & cc_meta_fifo.io.out.fire & cc_state_fifo.io.out.fire){
+            when(cc_meta_fifo.io.out.fire){
                 meta_reg                        := cc_meta_fifo.io.out.bits
-                mini_core.io.has_event_wr       := 1.U
-                mini_core.io.user_csr_wr(0)           := cc_meta_fifo.io.out.bits.op_code.asUInt
-                mini_core.io.user_csr_wr(1)           := cc_meta_fifo.io.out.bits.qpn
-                mini_core.io.user_csr_wr(2)           := cc_meta_fifo.io.out.bits.pkg_length
-                for(i <- 0 until 11){
-                    mini_core.io.user_csr_wr(i+3)     := cc_meta_fifo.io.out.bits.user_define(i*8+7,i*8)
-                }                
-                mini_core.io.user_csr_wr(16)          := cc_state_fifo.io.out.bits.credit
-                mini_core.io.user_csr_wr(17)          := cc_state_fifo.io.out.bits.rate
-                mini_core.io.user_csr_wr(18)          := cc_state_fifo.io.out.bits.timer
-                for(i <- 0 until 11){
-                    mini_core.io.user_csr_wr(i+19)    := cc_state_fifo.io.out.bits.user_define(i*8+7,i*8)
+                io.cc_req.valid                 := 1.U
+                io.cc_req.bits.is_wr            := false.B
+                io.cc_req.bits.lock             := false.B
+                io.cc_req.bits.qpn              := cc_meta_fifo.io.out.bits.qpn
+                state                           := sCC_STATE
+            }                 
+        }    
+        is(sCC_STATE){
+            when(cc_state_fifo.io.out.fire){
+                cc_reg                          := cc_state_fifo.io.out.bits
+                when(cc_state_fifo.io.out.bits.lock === true.B){
+                    io.cc_req.valid                 := 1.U
+                    io.cc_req.bits.is_wr            := false.B
+                    io.cc_req.bits.lock             := false.B
+                    io.cc_req.bits.qpn              := meta_reg.qpn     
+                    state                           := sCC_STATE                
+                }.otherwise{
+                    state                           := sWR_CORE
                 }
+            }                 
+        }         
+        is(sWR_CORE){
+            when((rx_core.io.has_event_rd === 0.U)){
+                rx_core.io.has_event_wr             := 1.U
+                for(i <- 0 until 11){
+                    rx_core.io.user_csr_wr(i.U+4.U+pkg_meta_addr_base)     := meta_reg.user_define(i*8+7,i*8)
+                    rx_core.io.user_csr_wr(i+1)    := cc_reg.user_define(i*8+7,i*8)
+                }
+                rx_core.io.user_csr_wr(1.U+pkg_meta_addr_base)           := meta_reg.op_code.asUInt
+                rx_core.io.user_csr_wr(2.U+pkg_meta_addr_base)           := meta_reg.pkg_length
+                rx_core.io.user_csr_wr(3.U+pkg_meta_addr_base)           := 0.U
+                rx_core.io.user_csr_wr(0)          := cc_reg.credit
+                // rx_core.io.user_csr_wr(1)          := cc_reg.rate
+                // rx_core.io.user_csr_wr(2)          := cc_reg.timer
                 state                           := sWAIT
             }                 
         }
@@ -108,21 +136,22 @@ class RX_CC() extends Module{
             }
         }
         is(sDONE){
-            when((mini_core.io.has_event_rd === 0.U)&(mini_core.io.event_recv_cnt === mini_core.io.event_processed_cnt)){
+            when((rx_core.io.has_event_rd === 0.U)&(rx_core.io.event_recv_cnt === rx_core.io.event_processed_cnt)){
                 io.cc_meta_out.valid            := 1.U
                 io.cc_meta_out.bits             := meta_reg
-                io.cc_meta_out.bits.op_code     := IB_OPCODE.safe(mini_core.io.user_csr_rd(0)(7,0))._1
-                io.cc_meta_out.bits.qpn         := mini_core.io.user_csr_rd(1)
-                io.cc_meta_out.bits.pkg_length  := mini_core.io.user_csr_rd(2)
+                // io.cc_meta_out.bits.qpn         := rx_core.io.user_csr_rd(1.U+pkg_meta_addr_base)
+                io.cc_meta_out.bits.op_code     := IB_OPCODE.safe(rx_core.io.user_csr_rd(1.U+pkg_meta_addr_base)(7,0))._1
+                io.cc_meta_out.bits.pkg_length  := rx_core.io.user_csr_rd(2.U+pkg_meta_addr_base)
+                // io.cc_meta_out.bits.header_len  := rx_core.io.user_header_len
                 io.cc_req.valid                 := 1.U
                 io.cc_req.bits.is_wr            := true.B
                 io.cc_req.bits.lock             := false.B
-                io.cc_req.bits.qpn              := mini_core.io.user_csr_rd(1)
-                io.cc_req.bits.cc_state.credit  := mini_core.io.user_csr_rd(16)
-                io.cc_req.bits.cc_state.rate    := mini_core.io.user_csr_rd(17) 
-                io.cc_req.bits.cc_state.timer   := mini_core.io.user_csr_rd(18)  
-                io.cc_req.bits.cc_state.user_define := Cat(mini_core.io.user_csr_rd(29),mini_core.io.user_csr_rd(28),mini_core.io.user_csr_rd(27),mini_core.io.user_csr_rd(26),mini_core.io.user_csr_rd(25),mini_core.io.user_csr_rd(24),
-                                                            mini_core.io.user_csr_rd(23),mini_core.io.user_csr_rd(22),mini_core.io.user_csr_rd(21),mini_core.io.user_csr_rd(20),mini_core.io.user_csr_rd(19))          
+                io.cc_req.bits.qpn              := meta_reg.qpn
+                io.cc_req.bits.cc_state.credit  := rx_core.io.user_csr_rd(0)
+                // io.cc_req.bits.cc_state.rate    := rx_core.io.user_csr_rd(1) 
+                // io.cc_req.bits.cc_state.timer   := rx_core.io.user_csr_rd(2)  
+                io.cc_req.bits.cc_state.user_define := Cat(rx_core.io.user_csr_rd(11),rx_core.io.user_csr_rd(10),rx_core.io.user_csr_rd(9),rx_core.io.user_csr_rd(8),rx_core.io.user_csr_rd(7),rx_core.io.user_csr_rd(6),
+                                                            rx_core.io.user_csr_rd(5),rx_core.io.user_csr_rd(4),rx_core.io.user_csr_rd(3),rx_core.io.user_csr_rd(2),rx_core.io.user_csr_rd(1))          
                 state                           := sIDLE
             }
         }

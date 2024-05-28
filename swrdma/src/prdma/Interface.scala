@@ -21,6 +21,14 @@ class App_meta()extends Bundle{
     val length = UInt(32.W)
 }
 
+class Total_meta()extends Bundle{
+	val rdma_cmd = APP_OP_CODE()
+	val qpn_num = UInt(32.W)
+    val msg_num_per_qpn = UInt(32.W)    
+    val local_vaddr = UInt(48.W)
+    val remote_vaddr = UInt(48.W)
+    val length = UInt(32.W)
+}
 
 
 
@@ -80,6 +88,7 @@ class Event_meta()extends Bundle{
     val r_vaddr = UInt(64.W)    //remote vaddr
     val msg_length = UInt(32.W)  
     val pkg_length = UInt(32.W)
+    val len_log = UInt(32.W)
     val header_len = UInt(4.W)  //0:0B, 1:4B, 2:8B, 3:16B, 4:32B, 5:44B
     val user_define = UInt(352.W)
     def event_gen(cmd_i:IB_OPCODE.Type, qpn_i:UInt, psn_i:UInt, ecn_i:Bool, vaddr_i:UInt, msg_length_i:UInt, pkg_length_i:UInt, user_define_i:UInt)={
@@ -91,6 +100,7 @@ class Event_meta()extends Bundle{
         r_vaddr     := vaddr_i
         msg_length  := msg_length_i
         pkg_length  := pkg_length_i
+        len_log     := 0.U
         header_len  := 0.U
         user_define := user_define_i
     }
@@ -103,6 +113,7 @@ class Event_meta()extends Bundle{
         r_vaddr     := 0.U
         msg_length  := 0.U
         pkg_length  := 0.U
+        len_log     := 0.U
         header_len  := 0.U
         user_define := user_define_i
     }
@@ -115,6 +126,7 @@ class Event_meta()extends Bundle{
         r_vaddr     := 0.U
         msg_length  := 0.U
         pkg_length  := 0.U
+        len_log     := 0.U
         header_len  := 0.U
         user_define := user_define_i
     }
@@ -126,6 +138,7 @@ class Event_meta()extends Bundle{
         l_vaddr     := l_vaddr_i
         r_vaddr     := 0.U
         msg_length  := 0.U
+        len_log     := 0.U
         pkg_length  := length_i
         user_define := 0.U
     }
@@ -138,6 +151,7 @@ class Event_meta()extends Bundle{
         r_vaddr     := vaddr_i
         msg_length  := msg_length_i
         pkg_length  := pkg_length_i
+        len_log     := 0.U
         user_define := 0.U
     }
 }
@@ -251,5 +265,7 @@ class CC_state()extends Bundle{
     val credit          = UInt(32.W)  
     val rate            = UInt(32.W)  
     val timer           = UInt(32.W)  //上次发送数据时的时间，用于计算数据包是否能否发送
-	val user_define      = UInt(352.W)   
+    val divide_rate     = UInt(32.W)
+	val user_define     = UInt(352.W)   
+    val lock            = Bool()
 }

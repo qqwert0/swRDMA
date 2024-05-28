@@ -39,13 +39,13 @@ class PRDMA() extends Module{
 
 
 
-	// Collector.fire(io.qp_init)
-	// Collector.fire(io.s_tx_meta)
-    // Collector.fire(io.s_send_data)
-    // Collector.fire(io.m_recv_meta)
-    // Collector.fire(io.m_recv_data)
-	// Collector.fire(io.m_net_tx_data)
-	// Collector.fire(io.s_net_rx_data)
+	Collector.fire(io.s_tx_meta)
+    Collector.fire(io.m_mem_read_cmd)
+    Collector.fire(io.s_mem_read_data)
+    Collector.fire(io.m_mem_write_cmd)
+    Collector.fire(io.m_mem_write_data)
+	Collector.fire(io.m_net_tx_data)
+	Collector.fire(io.s_net_rx_data)
 
     // Collector.report(io.s_tx_meta.ready)
     // Collector.report(io.s_tx_meta.valid)     
@@ -78,13 +78,11 @@ class PRDMA() extends Module{
     val rx_dispatch = Module(new RxDispatch())
     val pkg_drop = Module(new PkgDrop())
     val data_writer = Module(new DataWriter())
-    val rx_cc = Module(new RX_CC())
-    val rx_cc_req_arbiter = XArbiter(new CC_req(), 2)
+    val rx_cc = Module(new Timely())
 
     val handle_tx = Module(new HandleTx())
     val schedule = Module(new Schedule())
     val tx_cc = Module(new TX_CC())
-    val tx_cc_req_arbiter = XArbiter(new CC_req(), 2)
 
     val tx_event_arbiter = XArbiter(new Event_meta(),2)
     val tx_dispatch = Module(new TxDispatch())
@@ -131,10 +129,10 @@ class PRDMA() extends Module{
 
 	cus_head_proc.io.meta_in	        	<> head_process.io.meta_out
 	cus_head_proc.io.rx_data_out	    	<> rx_cus_router.io.in
-	cus_head_proc.io.swrdma_head_choice     := 1.U
+	cus_head_proc.io.swrdma_head_choice     := tx_cc.io.user_header_len
 
 
-    rx_cus_router.io.idx                    := 1.U
+    rx_cus_router.io.idx                    := tx_cc.io.user_header_len
     rx_cus_router.io.out(0)                 <> rx_cus_arbiter.io.in(0)
     rx_cus_router.io.out(1)                 <> rshift1.io.in
     rx_cus_router.io.out(2)                 <> rshift2.io.in
@@ -150,10 +148,9 @@ class PRDMA() extends Module{
 
 
 	rx_dispatch.io.meta_in                  <> cus_head_proc.io.meta_out
-	rx_dispatch.io.cc_pkg_type			    := 0.U
+	rx_dispatch.io.cc_pkg_type			    := rx_cc.io.pkg_type_to_cc
 	rx_dispatch.io.conn_req 			    <> conn_table.io.rx2conn_req
 	rx_dispatch.io.conn_rsp 			    <> conn_table.io.conn2rx_rsp
-    rx_dispatch.io.cc_req 			        <> rx_cc_req_arbiter.io.in(0)
 	rx_dispatch.io.cc_meta_out			    <> rx_cc.io.cc_meta_in 
 	rx_dispatch.io.event_meta_out           <> handle_tx.io.pkg_meta_in
 
@@ -174,7 +171,7 @@ class PRDMA() extends Module{
 
 
     rx_cc.io.cc_state_in                    <> cc_table.io.cc2rx_rsp
-    rx_cc.io.cc_req                         <> rx_cc_req_arbiter.io.in(1)
+    rx_cc.io.cc_req                         <> cc_table.io.rx2cc_req
     rx_cc.io.cc_meta_out                    <> handle_tx.io.cc_meta_in
     rx_cc.io.cpu_started                    := io.cpu_started
     rx_cc.io.axi                            <> io.axi(0)
@@ -185,14 +182,15 @@ class PRDMA() extends Module{
 	handle_tx.io.priori_meta_out		    <> tx_event_arbiter.io.in(0)
 	handle_tx.io.event_meta_out             <> schedule.io.meta_in
 
-    schedule.io.cc_req                      <> tx_cc_req_arbiter.io.in(0)
+
     schedule.io.event_meta_out              <> tx_cc.io.cc_meta_in
 
              
     tx_cc.io.cc_state_in                    <> cc_table.io.cc2tx_rsp
-    tx_cc.io.cc_req                         <> tx_cc_req_arbiter.io.in(1)
+    tx_cc.io.cc_req                         <> cc_table.io.tx2cc_req
     tx_cc.io.cc_meta_out                    <> tx_event_arbiter.io.in(1)
     tx_cc.io.cpu_started                    := io.cpu_started
+    
     tx_cc.io.axi                            <> io.axi(1)
 
 	tx_dispatch.io.meta_in	                <> tx_event_arbiter.io.out   	
@@ -203,12 +201,10 @@ class PRDMA() extends Module{
 	conn_table.io.conn_init	                <> io.qp_init 
 	conn_table.io.conn2tx_rsp	            <> head_add.io.conn_state
 
-	cc_table.io.rx2cc_req                   <> rx_cc_req_arbiter.io.out
-    cc_table.io.tx2cc_req                   <> tx_cc_req_arbiter.io.out
 	cc_table.io.cc_init                     <> io.cc_init
 
     tx_cus_router.io.in                     <> io.s_mem_read_data
-    tx_cus_router.io.idx                    := 1.U
+    tx_cus_router.io.idx                    := tx_cc.io.user_header_len
     tx_cus_router.io.out(0)                 <> tx_cus_arbiter.io.in(0)
     tx_cus_router.io.out(1)                 <> lshift1.io.in
     tx_cus_router.io.out(2)                 <> lshift2.io.in
@@ -226,14 +222,14 @@ class PRDMA() extends Module{
     user_add.io.reth_data_out               <> reth_lshift.io.in 
     user_add.io.aeth_data_out               <> aeth_lshift.io.in 
     user_add.io.raw_data_out	   	        <> raw_lshift.io.in
-	user_add.io.pkg_len			            := 1.U
+	user_add.io.pkg_len			            := tx_cc.io.user_header_len
 
 	head_add.io.reth_data_in                 <> reth_lshift.io.out
     head_add.io.aeth_data_in                 <> aeth_lshift.io.out
     head_add.io.raw_data_in                 <> raw_lshift.io.out
     head_add.io.tx_data_out	   	            <> io.m_net_tx_data
 	head_add.io.local_ip_address            := io.local_ip_address
-
+    head_add.io.user_header_len             := tx_cc.io.user_header_len
 
 }
 

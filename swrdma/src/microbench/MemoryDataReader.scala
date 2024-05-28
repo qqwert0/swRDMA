@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
 import common.storage._
+import common.axi._
 import common._
 import qdma._
 
@@ -22,16 +23,16 @@ class MemoryDataReader extends Module {
         // Callback signals, which contains callback address to write.
         val callback    = Decoupled(UInt(64.W))
         // Output data stream.
-        val memData     = Decoupled(UInt(512.W))
+        val memData     = Decoupled(AXIS(512))
     })
 
-    val reqRecvFifo     = XQueue(new PacketRequest, 4096)
+    val reqRecvFifo     = XQueue(new PacketRequest, 512)
     reqRecvFifo.io.in   <> io.cpuReq
     // Gradients in execution, i.e. reading from GPU.
     val reqExecFifo     = XQueue(new PacketRequest, 512)
     // Gradient data FIFO. 
-    val dataFifo1       = XQueue(UInt(512.W), 4096)
-    val dataFifo2       = XQueue(UInt(512.W), 4096)
+    val dataFifo1       = XQueue(AXIS(512), 4096)
+    val dataFifo2       = XQueue(AXIS(512), 4096)
     val dataFifoFull    = ~dataFifo2.io.in.ready
 
     // Used to control read memory commands
@@ -115,10 +116,13 @@ class MemoryDataReader extends Module {
     io.h2cCmd.bits.len  := reqDataRemain
 
     // H2C data handle.
-    dataFifo1.io.in.bits    := io.h2cData.bits.data
+    dataFifo1.io.in.bits.data    := io.h2cData.bits.data
+    dataFifo1.io.in.bits.keep    := "hffffffffffffffff".U
+    dataFifo1.io.in.bits.last    := (io.h2cData.fire 
+        && (h2cDataCnt + 64.U(64.W) === reqExecFifo.io.out.bits.size))
     // Please note that H2C data MIGHT send some useless zero bits.
     // If that happens, the beat should be thrown away!
-    dataFifo1.io.in.valid   := io.h2cData.valid & !io.h2cData.bits.tuser_zero_byte
+    dataFifo1.io.in.valid   := io.h2cData.valid
     io.h2cData.ready        := dataFifo1.io.in.ready
 
     dataFifo2.io.in         <> RegSlice(2)(dataFifo1.io.out)

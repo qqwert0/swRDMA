@@ -70,11 +70,11 @@ class StaticU280Top extends RawModule {
 	instQdma.io.pci_exp_rxp	:= qdmaPin.rx_p
 
 	val mmcmUsrClk	= Module(new MMCME4_ADV_Wrapper(
-		CLKFBOUT_MULT_F 		= 10,
+		CLKFBOUT_MULT_F 		= 9,
 		MMCM_DIVCLK_DIVIDE		= 1,
 		MMCM_CLKOUT0_DIVIDE_F	= 4,
-		MMCM_CLKOUT1_DIVIDE_F	= 10,
-		MMCM_CLKOUT2_DIVIDE_F	= 10,
+		MMCM_CLKOUT1_DIVIDE_F	= 9,
+		MMCM_CLKOUT2_DIVIDE_F	= 9,
 		MMCM_CLKIN1_PERIOD 		= 10
 	))
 

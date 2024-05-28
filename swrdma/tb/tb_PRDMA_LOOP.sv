@@ -112,14 +112,18 @@ reg       [23:0]    io_cc_init_0_bits_qpn         =0;
 reg       [31:0]    io_cc_init_0_bits_cc_state_credit=0;
 reg       [31:0]    io_cc_init_0_bits_cc_state_rate=0;
 reg       [31:0]    io_cc_init_0_bits_cc_state_timer=0;
+reg       [31:0]    io_cc_init_0_bits_cc_state_divide_rate=0;
 reg       [351:0]   io_cc_init_0_bits_cc_state_user_define=0;
+reg                 io_cc_init_0_bits_cc_state_lock=0;
 wire                io_cc_init_1_ready            ;
 reg                 io_cc_init_1_valid            =0;
 reg       [23:0]    io_cc_init_1_bits_qpn         =0;
 reg       [31:0]    io_cc_init_1_bits_cc_state_credit=0;
 reg       [31:0]    io_cc_init_1_bits_cc_state_rate=0;
 reg       [31:0]    io_cc_init_1_bits_cc_state_timer=0;
+reg       [31:0]    io_cc_init_1_bits_cc_state_divide_rate=0;
 reg       [351:0]   io_cc_init_1_bits_cc_state_user_define=0;
+reg                 io_cc_init_1_bits_cc_state_lock=0;
 reg       [31:0]    io_local_ip_address_0         =0;
 reg       [31:0]    io_local_ip_address_1         =0;
 wire                io_arp_req_0_ready            ;
@@ -136,6 +140,164 @@ reg                 io_arp_rsp_1_ready            =0;
 wire                io_arp_rsp_1_valid            ;
 wire      [47:0]    io_arp_rsp_1_bits_mac_addr    ;
 wire                io_arp_rsp_1_bits_hit         ;
+wire                io_axi0_0_aw_ready            ;
+wire                io_axi0_0_aw_valid            ;
+wire      [32:0]    io_axi0_0_aw_bits_addr        ;
+wire      [1:0]     io_axi0_0_aw_bits_burst       ;
+wire      [3:0]     io_axi0_0_aw_bits_cache       ;
+wire      [5:0]     io_axi0_0_aw_bits_id          ;
+wire      [3:0]     io_axi0_0_aw_bits_len         ;
+wire                io_axi0_0_aw_bits_lock        ;
+wire      [2:0]     io_axi0_0_aw_bits_prot        ;
+wire      [3:0]     io_axi0_0_aw_bits_qos         ;
+wire      [3:0]     io_axi0_0_aw_bits_region      ;
+wire      [2:0]     io_axi0_0_aw_bits_size        ;
+wire                io_axi0_0_ar_ready            ;
+wire                io_axi0_0_ar_valid            ;
+wire      [32:0]    io_axi0_0_ar_bits_addr        ;
+wire      [1:0]     io_axi0_0_ar_bits_burst       ;
+wire      [3:0]     io_axi0_0_ar_bits_cache       ;
+wire      [5:0]     io_axi0_0_ar_bits_id          ;
+wire      [3:0]     io_axi0_0_ar_bits_len         ;
+wire                io_axi0_0_ar_bits_lock        ;
+wire      [2:0]     io_axi0_0_ar_bits_prot        ;
+wire      [3:0]     io_axi0_0_ar_bits_qos         ;
+wire      [3:0]     io_axi0_0_ar_bits_region      ;
+wire      [2:0]     io_axi0_0_ar_bits_size        ;
+wire                io_axi0_0_w_ready             ;
+wire                io_axi0_0_w_valid             ;
+wire      [255:0]   io_axi0_0_w_bits_data         ;
+wire                io_axi0_0_w_bits_last         ;
+wire      [31:0]    io_axi0_0_w_bits_strb         ;
+wire                io_axi0_0_r_ready             ;
+wire                 io_axi0_0_r_valid             ;
+wire       [255:0]   io_axi0_0_r_bits_data         ;
+wire                 io_axi0_0_r_bits_last         ;
+wire       [1:0]     io_axi0_0_r_bits_resp         ;
+wire       [5:0]     io_axi0_0_r_bits_id           ;
+wire                io_axi0_0_b_ready             ;
+wire                 io_axi0_0_b_valid             ;
+wire       [5:0]     io_axi0_0_b_bits_id           ;
+wire       [1:0]     io_axi0_0_b_bits_resp         ;
+wire                 io_axi0_1_aw_ready            ;
+wire                io_axi0_1_aw_valid            ;
+wire      [32:0]    io_axi0_1_aw_bits_addr        ;
+wire      [1:0]     io_axi0_1_aw_bits_burst       ;
+wire      [3:0]     io_axi0_1_aw_bits_cache       ;
+wire      [5:0]     io_axi0_1_aw_bits_id          ;
+wire      [3:0]     io_axi0_1_aw_bits_len         ;
+wire                io_axi0_1_aw_bits_lock        ;
+wire      [2:0]     io_axi0_1_aw_bits_prot        ;
+wire      [3:0]     io_axi0_1_aw_bits_qos         ;
+wire      [3:0]     io_axi0_1_aw_bits_region      ;
+wire      [2:0]     io_axi0_1_aw_bits_size        ;
+wire                 io_axi0_1_ar_ready            ;
+wire                io_axi0_1_ar_valid            ;
+wire      [32:0]    io_axi0_1_ar_bits_addr        ;
+wire      [1:0]     io_axi0_1_ar_bits_burst       ;
+wire      [3:0]     io_axi0_1_ar_bits_cache       ;
+wire      [5:0]     io_axi0_1_ar_bits_id          ;
+wire      [3:0]     io_axi0_1_ar_bits_len         ;
+wire                io_axi0_1_ar_bits_lock        ;
+wire      [2:0]     io_axi0_1_ar_bits_prot        ;
+wire      [3:0]     io_axi0_1_ar_bits_qos         ;
+wire      [3:0]     io_axi0_1_ar_bits_region      ;
+wire      [2:0]     io_axi0_1_ar_bits_size        ;
+wire                 io_axi0_1_w_ready             ;
+wire                io_axi0_1_w_valid             ;
+wire      [255:0]   io_axi0_1_w_bits_data         ;
+wire                io_axi0_1_w_bits_last         ;
+wire      [31:0]    io_axi0_1_w_bits_strb         ;
+wire                io_axi0_1_r_ready             ;
+wire                 io_axi0_1_r_valid             ;
+wire       [255:0]   io_axi0_1_r_bits_data         ;
+wire                 io_axi0_1_r_bits_last         ;
+wire       [1:0]     io_axi0_1_r_bits_resp         ;
+wire       [5:0]     io_axi0_1_r_bits_id           ;
+wire                io_axi0_1_b_ready             ;
+wire                 io_axi0_1_b_valid             ;
+wire       [5:0]     io_axi0_1_b_bits_id           ;
+wire       [1:0]     io_axi0_1_b_bits_resp         ;
+wire                 io_axi1_0_aw_ready            ;
+wire                io_axi1_0_aw_valid            ;
+wire      [32:0]    io_axi1_0_aw_bits_addr        ;
+wire      [1:0]     io_axi1_0_aw_bits_burst       ;
+wire      [3:0]     io_axi1_0_aw_bits_cache       ;
+wire      [5:0]     io_axi1_0_aw_bits_id          ;
+wire      [3:0]     io_axi1_0_aw_bits_len         ;
+wire                io_axi1_0_aw_bits_lock        ;
+wire      [2:0]     io_axi1_0_aw_bits_prot        ;
+wire      [3:0]     io_axi1_0_aw_bits_qos         ;
+wire      [3:0]     io_axi1_0_aw_bits_region      ;
+wire      [2:0]     io_axi1_0_aw_bits_size        ;
+wire                 io_axi1_0_ar_ready            ;
+wire                io_axi1_0_ar_valid            ;
+wire      [32:0]    io_axi1_0_ar_bits_addr        ;
+wire      [1:0]     io_axi1_0_ar_bits_burst       ;
+wire      [3:0]     io_axi1_0_ar_bits_cache       ;
+wire      [5:0]     io_axi1_0_ar_bits_id          ;
+wire      [3:0]     io_axi1_0_ar_bits_len         ;
+wire                io_axi1_0_ar_bits_lock        ;
+wire      [2:0]     io_axi1_0_ar_bits_prot        ;
+wire      [3:0]     io_axi1_0_ar_bits_qos         ;
+wire      [3:0]     io_axi1_0_ar_bits_region      ;
+wire      [2:0]     io_axi1_0_ar_bits_size        ;
+wire                 io_axi1_0_w_ready             ;
+wire                io_axi1_0_w_valid             ;
+wire      [255:0]   io_axi1_0_w_bits_data         ;
+wire                io_axi1_0_w_bits_last         ;
+wire      [31:0]    io_axi1_0_w_bits_strb         ;
+wire                io_axi1_0_r_ready             ;
+wire                 io_axi1_0_r_valid             ;
+wire       [255:0]   io_axi1_0_r_bits_data         ;
+wire                 io_axi1_0_r_bits_last         ;
+wire       [1:0]     io_axi1_0_r_bits_resp         ;
+wire       [5:0]     io_axi1_0_r_bits_id           ;
+wire                io_axi1_0_b_ready             ;
+wire                 io_axi1_0_b_valid             ;
+wire       [5:0]     io_axi1_0_b_bits_id           ;
+wire       [1:0]     io_axi1_0_b_bits_resp         ;
+wire                 io_axi1_1_aw_ready            ;
+wire                io_axi1_1_aw_valid            ;
+wire      [32:0]    io_axi1_1_aw_bits_addr        ;
+wire      [1:0]     io_axi1_1_aw_bits_burst       ;
+wire      [3:0]     io_axi1_1_aw_bits_cache       ;
+wire      [5:0]     io_axi1_1_aw_bits_id          ;
+wire      [3:0]     io_axi1_1_aw_bits_len         ;
+wire                io_axi1_1_aw_bits_lock        ;
+wire      [2:0]     io_axi1_1_aw_bits_prot        ;
+wire      [3:0]     io_axi1_1_aw_bits_qos         ;
+wire      [3:0]     io_axi1_1_aw_bits_region      ;
+wire      [2:0]     io_axi1_1_aw_bits_size        ;
+wire                 io_axi1_1_ar_ready            ;
+wire                io_axi1_1_ar_valid            ;
+wire      [32:0]    io_axi1_1_ar_bits_addr        ;
+wire      [1:0]     io_axi1_1_ar_bits_burst       ;
+wire      [3:0]     io_axi1_1_ar_bits_cache       ;
+wire      [5:0]     io_axi1_1_ar_bits_id          ;
+wire      [3:0]     io_axi1_1_ar_bits_len         ;
+wire                io_axi1_1_ar_bits_lock        ;
+wire      [2:0]     io_axi1_1_ar_bits_prot        ;
+wire      [3:0]     io_axi1_1_ar_bits_qos         ;
+wire      [3:0]     io_axi1_1_ar_bits_region      ;
+wire      [2:0]     io_axi1_1_ar_bits_size        ;
+wire                 io_axi1_1_w_ready             ;
+wire                io_axi1_1_w_valid             ;
+wire      [255:0]   io_axi1_1_w_bits_data         ;
+wire                io_axi1_1_w_bits_last         ;
+wire      [31:0]    io_axi1_1_w_bits_strb         ;
+wire                io_axi1_1_r_ready             ;
+wire                 io_axi1_1_r_valid             ;
+wire       [255:0]   io_axi1_1_r_bits_data         ;
+wire                 io_axi1_1_r_bits_last         ;
+wire       [1:0]     io_axi1_1_r_bits_resp         ;
+wire       [5:0]     io_axi1_1_r_bits_id           ;
+wire                io_axi1_1_b_ready             ;
+wire                 io_axi1_1_b_valid             ;
+wire       [5:0]     io_axi1_1_b_bits_id           ;
+wire       [1:0]     io_axi1_1_b_bits_resp         ;
+reg                 io_cpu_started_0              =0;
+reg                 io_cpu_started_1              =0;
 wire      [31:0]    io_status_0                   ;
 wire      [31:0]    io_status_1                   ;
 wire      [31:0]    io_status_2                   ;
@@ -740,25 +902,26 @@ IN#(168)in_io_qp_init_1(
 // qpn, conn_state_remote_qpn, conn_state_remote_ip, conn_state_remote_udp_port, conn_state_rx_epsn, conn_state_tx_npsn, conn_state_rx_old_unack
 // 24'h0, 24'h0, 32'h0, 16'h0, 24'h0, 24'h0, 24'h0
 
-IN#(472)in_io_cc_init_0(
+IN#(505)in_io_cc_init_0(
         clock,
         reset,
-        {io_cc_init_0_bits_qpn,io_cc_init_0_bits_cc_state_credit,io_cc_init_0_bits_cc_state_rate,io_cc_init_0_bits_cc_state_timer,io_cc_init_0_bits_cc_state_user_define},
+        {io_cc_init_0_bits_qpn,io_cc_init_0_bits_cc_state_credit,io_cc_init_0_bits_cc_state_rate,io_cc_init_0_bits_cc_state_timer,io_cc_init_0_bits_cc_state_divide_rate,io_cc_init_0_bits_cc_state_user_define,io_cc_init_0_bits_cc_state_lock},
         io_cc_init_0_valid,
         io_cc_init_0_ready
 );
-// qpn, cc_state_credit, cc_state_rate, cc_state_timer, cc_state_user_define
-// 24'h0, 32'h0, 32'h0, 32'h0, 352'h0
+// qpn, cc_state_credit, cc_state_rate, cc_state_timer, cc_state_divide_rate, cc_state_user_define, cc_state_lock
+// 24'h0, 32'h0, 32'h0, 32'h0, 32'h0, 352'h0, 1'h0
 
-IN#(472)in_io_cc_init_1(
+IN#(505)in_io_cc_init_1(
         clock,
         reset,
-        {io_cc_init_1_bits_qpn,io_cc_init_1_bits_cc_state_credit,io_cc_init_1_bits_cc_state_rate,io_cc_init_1_bits_cc_state_timer,io_cc_init_1_bits_cc_state_user_define},
+        {io_cc_init_1_bits_qpn,io_cc_init_1_bits_cc_state_credit,io_cc_init_1_bits_cc_state_rate,io_cc_init_1_bits_cc_state_timer,io_cc_init_1_bits_cc_state_divide_rate,io_cc_init_1_bits_cc_state_user_define,io_cc_init_1_bits_cc_state_lock},
         io_cc_init_1_valid,
         io_cc_init_1_ready
 );
-// qpn, cc_state_credit, cc_state_rate, cc_state_timer, cc_state_user_define
-// 24'h0, 32'h0, 32'h0, 32'h0, 352'h0
+// qpn, cc_state_credit, cc_state_rate, cc_state_timer, cc_state_divide_rate, cc_state_user_define, cc_state_lock
+// 24'h0, 32'h0, 32'h0, 32'h0, 32'h0, 352'h0, 1'h0
+
 
 IN#(32)in_io_arp_req_0(
         clock,
@@ -800,6 +963,159 @@ OUT#(49)out_io_arp_rsp_1(
 // mac_addr, hit
 // 48'h0, 1'h0
 
+blk_mem_gen_0 inst_0_0 (
+  .rsta_busy(),          // output wire rsta_busy
+  .rstb_busy(),          // output wire rstb_busy
+  .s_aclk(clock),                // input wire s_aclk
+  .s_aresetn(!reset),          // input wire s_aresetn
+  .s_axi_awid(io_axi0_0_aw_bits_id),        // input wire [3 : 0] s_axi_awid
+  .s_axi_awaddr({20'b0,io_axi0_0_aw_bits_addr[11:0]}),    // input wire [31 : 0] s_axi_awaddr
+  .s_axi_awlen(0),      // input wire [7 : 0] s_axi_awlen
+  .s_axi_awsize(io_axi0_0_aw_bits_size),    // input wire [2 : 0] s_axi_awsize
+  .s_axi_awburst(io_axi0_0_aw_bits_burst),  // input wire [1 : 0] s_axi_awburst
+  .s_axi_awvalid(io_axi0_0_aw_valid),  // input wire s_axi_awvalid
+  .s_axi_awready(io_axi0_0_aw_ready),  // output wire s_axi_awready
+  .s_axi_wdata(0),      // input wire [255 : 0] s_axi_wdata
+  .s_axi_wstrb(io_axi0_0_w_bits_strb),      // input wire [31 : 0] s_axi_wstrb
+  .s_axi_wlast(io_axi0_0_w_bits_last),      // input wire s_axi_wlast
+  .s_axi_wvalid(io_axi0_0_w_valid),    // input wire s_axi_wvalid
+  .s_axi_wready(io_axi0_0_w_ready),    // output wire s_axi_wready
+  .s_axi_bid(),          // output wire [3 : 0] s_axi_bid
+  .s_axi_bresp(io_axi0_0_b_bits_resp),      // output wire [1 : 0] s_axi_bresp
+  .s_axi_bvalid(io_axi0_0_b_valid),    // output wire s_axi_bvalid
+  .s_axi_bready(io_axi0_0_b_ready),    // input wire s_axi_bready
+  .s_axi_arid(io_axi0_0_ar_bits_id),        // input wire [3 : 0] s_axi_arid
+  .s_axi_araddr({19'b0,io_axi0_0_ar_bits_addr[12:0]}),    // input wire [31 : 0] s_axi_araddr
+  .s_axi_arlen(0),      // input wire [7 : 0] s_axi_arlen
+  .s_axi_arsize(io_axi0_0_ar_bits_size),    // input wire [2 : 0] s_axi_arsize
+  .s_axi_arburst(io_axi0_0_ar_bits_burst),  // input wire [1 : 0] s_axi_arburst
+  .s_axi_arvalid(io_axi0_0_ar_valid),  // input wire s_axi_arvalid
+  .s_axi_arready(io_axi0_0_ar_ready),  // output wire s_axi_arready
+  .s_axi_rid(),          // output wire [3 : 0] s_axi_rid
+  .s_axi_rdata(io_axi0_0_r_bits_data),      // output wire [255 : 0] s_axi_rdata
+  .s_axi_rresp(io_axi0_0_r_bits_resp),      // output wire [1 : 0] s_axi_rresp
+  .s_axi_rlast(io_axi0_0_r_bits_last),      // output wire s_axi_rlast
+  .s_axi_rvalid(io_axi0_0_r_valid),    // output wire s_axi_rvalid
+  .s_axi_rready(io_axi0_0_r_ready)    // input wire s_axi_rready
+);
+
+blk_mem_gen_0 inst_0_1 (
+  .rsta_busy(),          // output wire rsta_busy
+  .rstb_busy(),          // output wire rstb_busy
+  .s_aclk(clock),                // input wire s_aclk
+  .s_aresetn(!reset),          // input wire s_aresetn
+  .s_axi_awid(io_axi0_1_aw_bits_id),        // input wire [3 : 0] s_axi_awid
+  .s_axi_awaddr({20'b0,io_axi0_1_aw_bits_addr[11:0]}),    // input wire [31 : 0] s_axi_awaddr
+  .s_axi_awlen(0),      // input wire [7 : 0] s_axi_awlen
+  .s_axi_awsize(io_axi0_1_aw_bits_size),    // input wire [2 : 0] s_axi_awsize
+  .s_axi_awburst(io_axi0_1_aw_bits_burst),  // input wire [1 : 0] s_axi_awburst
+  .s_axi_awvalid(io_axi0_1_aw_valid),  // input wire s_axi_awvalid
+  .s_axi_awready(io_axi0_1_aw_ready),  // output wire s_axi_awready
+  .s_axi_wdata(0),      // input wire [255 : 0] s_axi_wdata
+  .s_axi_wstrb(io_axi0_1_w_bits_strb),      // input wire [31 : 0] s_axi_wstrb
+  .s_axi_wlast(io_axi0_1_w_bits_last),      // input wire s_axi_wlast
+  .s_axi_wvalid(io_axi0_1_w_valid),    // input wire s_axi_wvalid
+  .s_axi_wready(io_axi0_1_w_ready),    // output wire s_axi_wready
+  .s_axi_bid(),          // output wire [3 : 0] s_axi_bid
+  .s_axi_bresp(io_axi0_1_b_bits_resp),      // output wire [1 : 0] s_axi_bresp
+  .s_axi_bvalid(io_axi0_1_b_valid),    // output wire s_axi_bvalid
+  .s_axi_bready(io_axi0_1_b_ready),    // input wire s_axi_bready
+  .s_axi_arid(io_axi0_1_ar_bits_id),        // input wire [3 : 0] s_axi_arid
+  .s_axi_araddr({19'b0,io_axi0_1_ar_bits_addr[12:0]}),    // input wire [31 : 0] s_axi_araddr
+  .s_axi_arlen(0),      // input wire [7 : 0] s_axi_arlen
+  .s_axi_arsize(io_axi0_1_ar_bits_size),    // input wire [2 : 0] s_axi_arsize
+  .s_axi_arburst(io_axi0_1_ar_bits_burst),  // input wire [1 : 0] s_axi_arburst
+  .s_axi_arvalid(io_axi0_1_ar_valid),  // input wire s_axi_arvalid
+  .s_axi_arready(io_axi0_1_ar_ready),  // output wire s_axi_arready
+  .s_axi_rid(),          // output wire [3 : 0] s_axi_rid
+  .s_axi_rdata(io_axi0_1_r_bits_data),      // output wire [255 : 0] s_axi_rdata
+  .s_axi_rresp(io_axi0_1_r_bits_resp),      // output wire [1 : 0] s_axi_rresp
+  .s_axi_rlast(io_axi0_1_r_bits_last),      // output wire s_axi_rlast
+  .s_axi_rvalid(io_axi0_1_r_valid),    // output wire s_axi_rvalid
+  .s_axi_rready(io_axi0_1_r_ready)    // input wire s_axi_rready
+);
+
+blk_mem_gen_0 inst_1_0 (
+  .rsta_busy(),          // output wire rsta_busy
+  .rstb_busy(),          // output wire rstb_busy
+  .s_aclk(clock),                // input wire s_aclk
+  .s_aresetn(!reset),          // input wire s_aresetn
+  .s_axi_awid(io_axi1_0_aw_bits_id),        // input wire [3 : 0] s_axi_awid
+  .s_axi_awaddr({20'b0,io_axi1_0_aw_bits_addr[11:0]}),    // input wire [31 : 0] s_axi_awaddr
+  .s_axi_awlen(0),      // input wire [7 : 0] s_axi_awlen
+  .s_axi_awsize(io_axi1_0_aw_bits_size),    // input wire [2 : 0] s_axi_awsize
+  .s_axi_awburst(io_axi1_0_aw_bits_burst),  // input wire [1 : 0] s_axi_awburst
+  .s_axi_awvalid(io_axi1_0_aw_valid),  // input wire s_axi_awvalid
+  .s_axi_awready(io_axi1_0_aw_ready),  // output wire s_axi_awready
+  .s_axi_wdata(0),      // input wire [255 : 0] s_axi_wdata
+  .s_axi_wstrb(io_axi1_0_w_bits_strb),      // input wire [31 : 0] s_axi_wstrb
+  .s_axi_wlast(io_axi1_0_w_bits_last),      // input wire s_axi_wlast
+  .s_axi_wvalid(io_axi1_0_w_valid),    // input wire s_axi_wvalid
+  .s_axi_wready(io_axi1_0_w_ready),    // output wire s_axi_wready
+  .s_axi_bid(),          // output wire [3 : 0] s_axi_bid
+  .s_axi_bresp(io_axi1_0_b_bits_resp),      // output wire [1 : 0] s_axi_bresp
+  .s_axi_bvalid(io_axi1_0_b_valid),    // output wire s_axi_bvalid
+  .s_axi_bready(io_axi1_0_b_ready),    // input wire s_axi_bready
+  .s_axi_arid(io_axi1_0_ar_bits_id),        // input wire [3 : 0] s_axi_arid
+  .s_axi_araddr({19'b0,io_axi1_0_ar_bits_addr[12:0]}),    // input wire [31 : 0] s_axi_araddr
+  .s_axi_arlen(0),      // input wire [7 : 0] s_axi_arlen
+  .s_axi_arsize(io_axi1_0_ar_bits_size),    // input wire [2 : 0] s_axi_arsize
+  .s_axi_arburst(io_axi1_0_ar_bits_burst),  // input wire [1 : 0] s_axi_arburst
+  .s_axi_arvalid(io_axi1_0_ar_valid),  // input wire s_axi_arvalid
+  .s_axi_arready(io_axi1_0_ar_ready),  // output wire s_axi_arready
+  .s_axi_rid(),          // output wire [3 : 0] s_axi_rid
+  .s_axi_rdata(io_axi1_0_r_bits_data),      // output wire [255 : 0] s_axi_rdata
+  .s_axi_rresp(io_axi1_0_r_bits_resp),      // output wire [1 : 0] s_axi_rresp
+  .s_axi_rlast(io_axi1_0_r_bits_last),      // output wire s_axi_rlast
+  .s_axi_rvalid(io_axi1_0_r_valid),    // output wire s_axi_rvalid
+  .s_axi_rready(io_axi1_0_r_ready)    // input wire s_axi_rready
+);
+
+blk_mem_gen_0 inst_1_1 (
+  .rsta_busy(),          // output wire rsta_busy
+  .rstb_busy(),          // output wire rstb_busy
+  .s_aclk(clock),                // input wire s_aclk
+  .s_aresetn(!reset),         // input wire s_aresetn
+  .s_axi_awid(io_axi1_1_aw_bits_id),        // input wire [3 : 0] s_axi_awid
+  .s_axi_awaddr({20'b0,io_axi1_1_aw_bits_addr[11:0]}),    // input wire [31 : 0] s_axi_awaddr
+  .s_axi_awlen(0),      // input wire [7 : 0] s_axi_awlen
+  .s_axi_awsize(io_axi1_1_aw_bits_size),    // input wire [2 : 0] s_axi_awsize
+  .s_axi_awburst(io_axi1_1_aw_bits_burst),  // input wire [1 : 0] s_axi_awburst
+  .s_axi_awvalid(io_axi1_1_aw_valid),  // input wire s_axi_awvalid
+  .s_axi_awready(io_axi1_1_aw_ready),  // output wire s_axi_awready
+  .s_axi_wdata(0),      // input wire [255 : 0] s_axi_wdata
+  .s_axi_wstrb(io_axi1_1_w_bits_strb),      // input wire [31 : 0] s_axi_wstrb
+  .s_axi_wlast(io_axi1_1_w_bits_last),      // input wire s_axi_wlast
+  .s_axi_wvalid(io_axi1_1_w_valid),    // input wire s_axi_wvalid
+  .s_axi_wready(io_axi1_1_w_ready),    // output wire s_axi_wready
+  .s_axi_bid(),          // output wire [3 : 0] s_axi_bid
+  .s_axi_bresp(io_axi1_1_b_bits_resp),      // output wire [1 : 0] s_axi_bresp
+  .s_axi_bvalid(io_axi1_1_b_valid),    // output wire s_axi_bvalid
+  .s_axi_bready(io_axi1_1_b_ready),    // input wire s_axi_bready
+  .s_axi_arid(io_axi1_1_ar_bits_id),        // input wire [3 : 0] s_axi_arid
+  .s_axi_araddr({19'b0,io_axi1_1_ar_bits_addr[12:0]}),    // input wire [31 : 0] s_axi_araddr
+  .s_axi_arlen(0),      // input wire [7 : 0] s_axi_arlen
+  .s_axi_arsize(io_axi1_1_ar_bits_size),    // input wire [2 : 0] s_axi_arsize
+  .s_axi_arburst(io_axi1_1_ar_bits_burst),  // input wire [1 : 0] s_axi_arburst
+  .s_axi_arvalid(io_axi1_1_ar_valid),  // input wire s_axi_arvalid
+  .s_axi_arready(io_axi1_1_ar_ready),  // output wire s_axi_arready
+  .s_axi_rid(),          // output wire [3 : 0] s_axi_rid
+  .s_axi_rdata(io_axi1_1_r_bits_data),      // output wire [255 : 0] s_axi_rdata
+  .s_axi_rresp(io_axi1_1_r_bits_resp),      // output wire [1 : 0] s_axi_rresp
+  .s_axi_rlast(io_axi1_1_r_bits_last),      // output wire s_axi_rlast
+  .s_axi_rvalid(io_axi1_1_r_valid),    // output wire s_axi_rvalid
+  .s_axi_rready(io_axi1_1_r_ready)    // input wire s_axi_rready
+);
+
+
+assign io_axi0_0_r_bits_id = 0;
+assign io_axi0_0_b_bits_id = 0;
+assign io_axi0_1_r_bits_id = 0;
+assign io_axi0_1_b_bits_id = 0;
+assign io_axi1_0_r_bits_id = 0;
+assign io_axi1_0_b_bits_id = 0;
+assign io_axi1_1_r_bits_id = 0;
+assign io_axi1_1_b_bits_id = 0;
 
 PRDMA_LOOP PRDMA_LOOP_inst(
         .*
@@ -848,10 +1164,15 @@ initial begin
         reset <= 1;
         clock = 1;
         io_local_ip_address_0         =32'h01bda8c0;
-        io_local_ip_address_1         =32'h02bda8c0;    
+        io_local_ip_address_1         =32'h02bda8c0;   
+        io_cpu_started_0              = 1'b1; 
+        io_cpu_started_1              = 1'b1; 
         $readmemh("config_big_rd_wr.hex", rdma_config);
-        #1000;
+        #10000;
         reset <= 0;
+        #1000
+        io_cpu_started_0              = 1'b0; 
+        io_cpu_started_1              = 1'b0;        
         #100;
         out_io_arp_rsp_0.start();
         out_io_arp_rsp_1.start();
@@ -878,6 +1199,10 @@ initial begin
         in_io_qp_init_1.write({24'h1,24'h1,32'h01bda8c0,16'h17,24'h1000,24'h4000,24'h4000});
         in_io_qp_init_0.write({24'h2,24'h2,32'h02bda8c0,16'h17,24'h10000,24'h40000,24'h40000});     // qpn, op_code, credit, psn// 24'h0, 8'h0, 16'h0, 24'h0
         in_io_qp_init_1.write({24'h2,24'h2,32'h01bda8c0,16'h17,24'h40000,24'h10000,24'h10000});
+        in_io_cc_init_0.write({24'h1,32'h0000,32'h2cec,32'h0,32'h164,352'h164_00000000_00002cec,1'h0}); //qpn,cc_state_credit,cc_state_rate,cc_state_timer,cc_state_user_define
+        in_io_cc_init_0.write({24'h2,32'h0000,32'h2cec,32'h0,32'h164,352'h164_00000000_00002cec,1'h0});
+        in_io_cc_init_1.write({24'h1,32'h0000,32'h2cec,32'h0,32'h164,352'h164_00000000_00002cec,1'h0}); //qpn,cc_state_credit,cc_state_rate,cc_state_timer,cc_state_user_define
+        in_io_cc_init_1.write({24'h2,32'h0000,32'h2cec,32'h0,32'h164,352'h164_00000000_00002cec,1'h0});   //qpn, cc_state_credit, cc_state_rate, cc_state_timer, cc_state_divide_rate, cc_state_user_define, cc_state_lock     
     // qpn, local_psn, remote_psn, remote_qpn, remote_ip, remote_udp_port, credit
     // 16'h0, 24'h0, 24'h0, 24'h0, 32'h0, 16'h0, 24'h0
     
@@ -921,5 +1246,5 @@ initial begin
         // end
 end
 
-always #5 clock=~clock;
+always #2 clock=~clock;
 endmodule

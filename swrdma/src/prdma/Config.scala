@@ -41,6 +41,7 @@ object CONFIG{
     def IBH_HEADER_LEN = 96
     def RETH_HEADER_LEN = 128
     def AETH_HEADER_LEN = 32
+    def SWRDMA_HEADER_LEN = 32
     def SWRDMA_HEADER_LEN1 = 32
     def SWRDMA_HEADER_LEN2 = 64
     def SWRDMA_HEADER_LEN3 = 128
@@ -141,12 +142,33 @@ object  IB_OPCODE extends ChiselEnum{
     val	RC_DIRECT_MIDDLE = Value(0x19.U)
     val	RC_DIRECT_LAST = Value(0x1A.U)
     val	RC_DIRECT_ONLY = Value(0x1B.U)
+    val	CNP = Value(0x81.U)
     val	reserve = Value(0xFF.U)
 
 }
 
 
+object TIMELY{
+    def alfa = 57344 //1<<16 *7/8
+    def belta = 52428 //1<<16*4/5
+    def minRTT = 540
+    def Rai = 5
+    def Tlow = 550
+    def Thigh = 2000
+    def DIVEDE_RATE_U = 3686400
+    def USER_TABLE_SIZE = 3
+}
 
+object DCQCN{
+    def a = 65536 //1<<16 *7/8
+    def g = 256 //1<<16*4/5
+    def one_g = 65280 //1-g
+    def T_55us = 12375
+    def Rai = 5
+    def BC_expires = 10485760
+    def DIVEDE_RATE_U = 3686400
+    def USER_TABLE_SIZE = 3
+}
 
 
 

@@ -17,10 +17,17 @@ class HeadAdd() extends Module{
 
 		val conn_state	    = Flipped(Decoupled(new Conn_state()))
         val tx_data_out	   	= (Decoupled(new AXIS(512)))
-
+		
+		val user_header_len = Input(UInt(32.W))
 		val local_ip_address= Input(UInt(32.W))
 
 	})
+	Collector.fire(io.meta_in)
+	Collector.fire(io.reth_data_in)
+	Collector.fire(io.aeth_data_in)
+	Collector.fire(io.raw_data_in)
+	Collector.fire(io.conn_state)
+
 	val IP_HEADER_HIGH = CONFIG.IP_HEADER_LEN -1
 	val UDP_HEADER_HIGH = CONFIG.IP_HEADER_LEN + CONFIG.UDP_HEADER_LEN -1
 	val IBH_HEADER_HIGH = CONFIG.IP_HEADER_LEN + CONFIG.UDP_HEADER_LEN + CONFIG.IBH_HEADER_LEN -1
@@ -92,18 +99,18 @@ class HeadAdd() extends Module{
 
 
 	val usr_defined_header_len = Reg(UInt(32.W))
-	when(meta_fifo.io.out.bits.header_len === 0.U){
+	when(RegNext(io.user_header_len) === 0.U){
 		usr_defined_header_len := 0.U
-	}.elsewhen(meta_fifo.io.out.bits.header_len === 1.U){
+	}.elsewhen(RegNext(io.user_header_len) === 1.U){
 		usr_defined_header_len := 4.U
-	}.elsewhen(meta_fifo.io.out.bits.header_len === 2.U){
+	}.elsewhen(RegNext(io.user_header_len) === 2.U){
 		usr_defined_header_len := 8.U
-	}.elsewhen(meta_fifo.io.out.bits.header_len === 3.U){
+	}.elsewhen(RegNext(io.user_header_len) === 3.U){
 		usr_defined_header_len := 16.U
-	}.elsewhen(meta_fifo.io.out.bits.header_len === 4.U){
+	}.elsewhen(RegNext(io.user_header_len) === 4.U){
 		usr_defined_header_len := 32.U
-	}.elsewhen(meta_fifo.io.out.bits.header_len === 5.U){
-		usr_defined_header_len := 42.U
+	}.elsewhen(RegNext(io.user_header_len) === 5.U){
+		usr_defined_header_len := 64.U
 	}.otherwise{
 		usr_defined_header_len := 0.U
 	}

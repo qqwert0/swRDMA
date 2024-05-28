@@ -17,6 +17,9 @@ class TxDispatch() extends Module{
 		val event_meta_out		= (Decoupled(new Event_meta()))
 	})
 
+	Collector.fire(io.meta_in)
+	Collector.fire(io.conn_req)
+	Collector.fire(io.event_meta_out)
 	val meta_fifo = XQueue(new Event_meta(), entries=16)
 	io.meta_in 		    <> meta_fifo.io.in
 

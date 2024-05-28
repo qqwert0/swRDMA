@@ -26,9 +26,10 @@ class UserAdd() extends Module{
 
 
 	val user_define = RegInit(0.U(352.W))
+	val meta_reg = Reg(new Event_meta())
 	val pkg_len = RegNext(io.pkg_len)
 
-	val sIDLE :: sRETH :: sAETH :: sRAW :: sRETHDATA :: sAETHDATA :: sRAWDATA :: Nil = Enum(7)
+	val sIDLE :: sHeader :: sRETH :: sAETH :: sRAW :: sRETHDATA :: sAETHDATA :: sRAWDATA :: Nil = Enum(8)
 	val state                   = RegInit(sIDLE)	
 	
 
@@ -53,7 +54,10 @@ class UserAdd() extends Module{
 			when(meta_fifo.io.out.fire){
 				io.meta_out.valid						:= 1.U
 				io.meta_out.bits						:= meta_fifo.io.out.bits
-				when(PKG_JUDGE.RETH_PKG(meta_fifo.io.out.bits.op_code)){
+				meta_reg								:= meta_fifo.io.out.bits
+				when(meta_fifo.io.out.bits.pkg_length === 0.U){
+					state						:= sHeader
+				}.elsewhen(PKG_JUDGE.RETH_PKG(meta_fifo.io.out.bits.op_code)){
 					state                       := sRETH
 				}.elsewhen(PKG_JUDGE.AETH_PKG(meta_fifo.io.out.bits.op_code)){
 					state                       := sAETH				
@@ -63,21 +67,79 @@ class UserAdd() extends Module{
 				}
 			}
 		}
+		is(sHeader){
+			when(PKG_JUDGE.RETH_PKG(meta_reg.op_code)&&io.reth_data_out.ready){
+				io.reth_data_out.valid            := 1.U	
+				state                       	  := sIDLE			
+			}.elsewhen(PKG_JUDGE.AETH_PKG(meta_reg.op_code)&&io.aeth_data_out.ready){
+				io.aeth_data_out.valid            := 1.U
+				state                       		:= sIDLE
+			}.elsewhen(io.raw_data_out.ready){
+				io.raw_data_out.valid            := 1.U
+				state                       	:= sIDLE
+			}
+			when(pkg_len === 1.U){
+				io.reth_data_out.bits.data        := meta_reg.user_define
+				io.reth_data_out.bits.keep        := "hf".U
+				io.aeth_data_out.bits.data        := meta_reg.user_define
+				io.aeth_data_out.bits.keep        := "hf".U
+				io.raw_data_out.bits.data        := meta_reg.user_define
+				io.raw_data_out.bits.keep        := "hf".U								
+			}.elsewhen(pkg_len === 2.U){
+				io.reth_data_out.bits.data        := meta_reg.user_define
+				io.reth_data_out.bits.keep        := "hff".U
+				io.aeth_data_out.bits.data        := meta_reg.user_define
+				io.aeth_data_out.bits.keep        := "hff".U
+				io.raw_data_out.bits.data        := meta_reg.user_define
+				io.raw_data_out.bits.keep        := "hff".U					
+			}.elsewhen(pkg_len === 3.U){
+				io.reth_data_out.bits.data        := meta_reg.user_define
+				io.reth_data_out.bits.keep        := "hffff".U
+				io.aeth_data_out.bits.data        := meta_reg.user_define
+				io.aeth_data_out.bits.keep        := "hffff".U
+				io.raw_data_out.bits.data        := meta_reg.user_define
+				io.raw_data_out.bits.keep        := "hffff".U					
+			}.elsewhen(pkg_len === 4.U){
+				io.reth_data_out.bits.data        := meta_reg.user_define
+				io.reth_data_out.bits.keep        := "hffffffff".U
+				io.aeth_data_out.bits.data        := meta_reg.user_define
+				io.aeth_data_out.bits.keep        := "hffffffff".U
+				io.raw_data_out.bits.data        := meta_reg.user_define
+				io.raw_data_out.bits.keep        := "hffffffff".U					
+			}.elsewhen(pkg_len === 5.U){
+				io.reth_data_out.bits.data        := meta_reg.user_define
+				io.reth_data_out.bits.keep        := "hffffffffffffffff".U
+				io.aeth_data_out.bits.data        := meta_reg.user_define
+				io.aeth_data_out.bits.keep        := "hffffffffffffffff".U
+				io.raw_data_out.bits.data        := meta_reg.user_define
+				io.raw_data_out.bits.keep        := "hffffffffffffffff".U					
+			}.otherwise{
+				io.reth_data_out.bits.data        := meta_reg.user_define
+				io.reth_data_out.bits.keep        := "hf".U
+				io.aeth_data_out.bits.data        := meta_reg.user_define
+				io.aeth_data_out.bits.keep        := "hf".U
+				io.raw_data_out.bits.data        := meta_reg.user_define
+				io.raw_data_out.bits.keep        := "hf".U					
+			}
+			io.reth_data_out.bits.last        	:= 1.U
+			io.aeth_data_out.bits.last        	:= 1.U
+			io.raw_data_out.bits.last        	:= 1.U
+		}
 		is(sRETH){
 			when(data_fifo.io.out.fire){
 				io.reth_data_out.valid            := 1.U
 				when(pkg_len === 0.U){
 					io.reth_data_out.bits.data        := data_fifo.io.out.bits.data
 				}.elsewhen(pkg_len === 1.U){
-					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN1),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN1-1,0))
+					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN1),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN1-1,0))
 				}.elsewhen(pkg_len === 2.U){
-					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN2),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN2-1,0))
+					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN2),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN2-1,0))
 				}.elsewhen(pkg_len === 3.U){
-					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN3),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN3-1,0))
+					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN3),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN3-1,0))
 				}.elsewhen(pkg_len === 4.U){
-					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN4),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN4-1,0))
+					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN4),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN4-1,0))
 				}.elsewhen(pkg_len === 5.U){
-					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN5),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN5-1,0))
+					io.reth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN5),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN5-1,0))
 				}.otherwise{
 					io.reth_data_out.bits.data        := data_fifo.io.out.bits.data
 				}
@@ -96,15 +158,15 @@ class UserAdd() extends Module{
 				when(pkg_len === 0.U){
 					io.aeth_data_out.bits.data        := data_fifo.io.out.bits.data
 				}.elsewhen(pkg_len === 1.U){
-					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN1),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN1-1,0))
+					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN1),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN1-1,0))
 				}.elsewhen(pkg_len === 2.U){
-					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN2),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN2-1,0))
+					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN2),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN2-1,0))
 				}.elsewhen(pkg_len === 3.U){
-					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN3),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN3-1,0))
+					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN3),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN3-1,0))
 				}.elsewhen(pkg_len === 4.U){
-					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN4),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN4-1,0))
+					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN4),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN4-1,0))
 				}.elsewhen(pkg_len === 5.U){
-					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN5),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN5-1,0))
+					io.aeth_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN5),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN5-1,0))
 				}.otherwise{
 					io.aeth_data_out.bits.data        := data_fifo.io.out.bits.data
 				}
@@ -123,15 +185,15 @@ class UserAdd() extends Module{
 				when(pkg_len === 0.U){
 					io.raw_data_out.bits.data        := data_fifo.io.out.bits.data
 				}.elsewhen(pkg_len === 1.U){
-					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN1),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN1-1,0))
+					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN1),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN1-1,0))
 				}.elsewhen(pkg_len === 2.U){
-					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN2),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN2-1,0))
+					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN2),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN2-1,0))
 				}.elsewhen(pkg_len === 3.U){
-					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN3),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN3-1,0))
+					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN3),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN3-1,0))
 				}.elsewhen(pkg_len === 4.U){
-					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN4),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN4-1,0))
+					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN4),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN4-1,0))
 				}.elsewhen(pkg_len === 5.U){
-					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN5),meta_fifo.io.out.bits.user_define(CONFIG.SWRDMA_HEADER_LEN5-1,0))
+					io.raw_data_out.bits.data        := Cat(data_fifo.io.out.bits.data(511,CONFIG.SWRDMA_HEADER_LEN5),meta_reg.user_define(CONFIG.SWRDMA_HEADER_LEN5-1,0))
 				}.otherwise{
 					io.raw_data_out.bits.data        := data_fifo.io.out.bits.data
 				}

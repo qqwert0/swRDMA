@@ -21,6 +21,13 @@ class HandleTx() extends Module{
 		val event_meta_out		= (Decoupled(new Event_meta()))
 	})
 
+	Collector.fire(io.app_meta_in)
+    Collector.fire(io.pkg_meta_in)
+    Collector.fire(io.cc_meta_in)
+    Collector.fire(io.priori_meta_out)
+    Collector.fire(io.event_meta_out)
+
+
 	val app_fifo = XQueue(new App_meta(), entries=16)
 	val pkg_fifo = XQueue(new Pkg_meta(), entries=16)
 	val cc_fifo = XQueue(new Pkg_meta(), entries=16)   //fix
@@ -62,6 +69,7 @@ class HandleTx() extends Module{
 				when(PKG_JUDGE.INFER_PKG(pkg_fifo.io.out.bits.op_code)){
 					io.event_meta_out.valid			:= 1.U
 					io.event_meta_out.bits.event_gen(cc_fifo.io.out.bits.op_code, cc_fifo.io.out.bits.qpn, cc_fifo.io.out.bits.psn, cc_fifo.io.out.bits.ecn, cc_fifo.io.out.bits.vaddr, cc_fifo.io.out.bits.msg_length, cc_fifo.io.out.bits.pkg_length, cc_fifo.io.out.bits.user_define)
+					io.event_meta_out.bits.len_log	:= 5.U
 				}.otherwise{
 					io.priori_meta_out.valid			:= 1.U
 					io.priori_meta_out.bits.event_gen(cc_fifo.io.out.bits.op_code, cc_fifo.io.out.bits.qpn, cc_fifo.io.out.bits.psn, cc_fifo.io.out.bits.ecn, cc_fifo.io.out.bits.vaddr, cc_fifo.io.out.bits.msg_length, cc_fifo.io.out.bits.pkg_length, cc_fifo.io.out.bits.user_define)
@@ -79,11 +87,13 @@ class HandleTx() extends Module{
 						length                      := pkg_fifo.io.out.bits.msg_length - CONFIG.MTU.U  
 						psn                         := pkg_fifo.io.out.bits.psn + 1.U
 						io.event_meta_out.bits.remote_event(IB_OPCODE.RC_READ_RESP_FIRST, pkg_fifo.io.out.bits.qpn, pkg_fifo.io.out.bits.psn, pkg_fifo.io.out.bits.vaddr, CONFIG.MTU.U)
+						io.event_meta_out.bits.len_log	:= log2Up(CONFIG.MTU).U
 					}.otherwise{
 						state	                    := sIDLE
 						vaddr                       := pkg_fifo.io.out.bits.vaddr
 						length                      := pkg_fifo.io.out.bits.msg_length
 						io.event_meta_out.bits.remote_event(IB_OPCODE.RC_READ_RESP_ONLY, pkg_fifo.io.out.bits.qpn, pkg_fifo.io.out.bits.psn, pkg_fifo.io.out.bits.vaddr, pkg_fifo.io.out.bits.msg_length) 
+						io.event_meta_out.bits.len_log	:= 5.U					
 					}					
 				}
 			}.elsewhen(app_fifo.io.out.fire){
@@ -102,12 +112,14 @@ class HandleTx() extends Module{
                         raddr                       := app_fifo.io.out.bits.remote_vaddr + CONFIG.MTU.U
                         length                      := app_fifo.io.out.bits.length - CONFIG.MTU.U  
                         io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_FIRST, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length, CONFIG.MTU.U )                       
-                    }.otherwise{
+						io.event_meta_out.bits.len_log	:= log2Up(CONFIG.MTU).U
+					}.otherwise{
                         state	                    := sIDLE
                         laddr                       := app_fifo.io.out.bits.local_vaddr
                         raddr                       := app_fifo.io.out.bits.remote_vaddr
                         length                      := app_fifo.io.out.bits.length
                         io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_ONLY, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length, app_fifo.io.out.bits.length) 
+						io.event_meta_out.bits.len_log	:= 5.U						
                     }
                     io.event_meta_out.valid         := 1.U
                 }
@@ -120,13 +132,15 @@ class HandleTx() extends Module{
                     vaddr                       := vaddr + CONFIG.MTU.U
                     length                      := length - CONFIG.MTU.U  
                     psn                         := psn + 1.U 
-                    io.event_meta_out.bits.remote_event(IB_OPCODE.RC_READ_RESP_MIDDLE, app_meta.qpn, psn, vaddr, CONFIG.MTU.U)                    
+                    io.event_meta_out.bits.remote_event(IB_OPCODE.RC_READ_RESP_MIDDLE, app_meta.qpn, psn, vaddr, CONFIG.MTU.U) 
+					io.event_meta_out.bits.len_log	:= log2Up(CONFIG.MTU).U                   
                 }.otherwise{
                     state	                    := sIDLE
                     vaddr                       := 0.U
                     length                      := 0.U
                     psn                         := 0.U
                     io.event_meta_out.bits.remote_event(IB_OPCODE.RC_READ_RESP_LAST, app_meta.qpn, psn, vaddr, length)
+					io.event_meta_out.bits.len_log	:= 5.U					
                 }  
                 io.event_meta_out.valid      := 1.U
 			}
@@ -139,12 +153,14 @@ class HandleTx() extends Module{
                     raddr                       := raddr + CONFIG.MTU.U
                     length                      := length - CONFIG.MTU.U   
                     io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_MIDDLE, app_meta.qpn, laddr, raddr, length, CONFIG.MTU.U)                     
-                }.otherwise{
+					io.event_meta_out.bits.len_log	:= log2Up(CONFIG.MTU).U
+				}.otherwise{
                     state	                    := sIDLE
                     laddr                       := 0.U
                     raddr                       := 0.U
                     length                      := 0.U
                     io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_LAST, app_meta.qpn, laddr, raddr, length, length)
+					io.event_meta_out.bits.len_log	:= 5.U	
                 }
                 io.event_meta_out.valid         := 1.U  
 			}
