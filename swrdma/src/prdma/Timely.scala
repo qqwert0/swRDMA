@@ -124,9 +124,17 @@ class Timely() extends Module{
     }
 
     //cycle 0
-    ts              := meta_reg.user_define(31,0)
-    rate            := cc_reg.user_define(31,0).asTypeOf(SInt())
-    cc_timer        := cc_reg.user_define(63,32)
+    when(state === sWR_CORE){
+        ts              := meta_reg.user_define(31,0)
+        rate            := cc_reg.user_define(31,0).asTypeOf(SInt())
+        cc_timer        := cc_reg.user_define(63,32)
+        prev_rtt        := cc_reg.user_define(127,96).asTypeOf(SInt())
+        rtt_diff        := cc_reg.user_define(159,128).asTypeOf(SInt())  
+    }.elsewhen(cal_valid_shift(9) === 1.U){
+        rtt_diff        := (mul_a + mul_b) >> 16.U
+    }.elsewhen(cal_valid_shift(2) === 1.U){
+        prev_rtt        := new_rtt
+    }
     //cycle 1
     when(cal_valid_shift(0) === 1.U){
         new_rtt         := (Timer - ts).asTypeOf(SInt())
@@ -134,10 +142,6 @@ class Timely() extends Module{
     //cycle 2
     when(cal_valid_shift(1) === 1.U){
         new_rtt_diff    := new_rtt - prev_rtt
-    }
-    //cycle 3
-    when(cal_valid_shift(2) === 1.U){
-        prev_rtt        := new_rtt
     }
     //cycle 4
     tmp_b               := 65536.S - alfa
@@ -151,10 +155,6 @@ class Timely() extends Module{
     mul1.io.A           := new_rtt_diff
     mul1.io.B           := alfa
     mul_b               := mul1.io.P
-    //cycle 7
-    when(cal_valid_shift(9) === 1.U){
-        rtt_diff        := (mul_a + mul_b) >> 16.U
-    }
     //cycle 9
     div0.io.aclk                        := clock
 	div0.io.s_axis_divisor_tvalid       := cal_valid_shift(10)
@@ -279,13 +279,13 @@ class Timely() extends Module{
                 io.cc_req.bits.lock             := false.B
                 io.cc_req.bits.qpn              := meta_reg.qpn
                 io.cc_req.bits.cc_state.credit  := 0.U
-                io.cc_req.bits.cc_state.user_define := Cat(divede_rate,cc_timer,rc)          
+                io.cc_req.bits.cc_state.user_define := Cat(rtt_diff,prev_rtt,divede_rate,cc_timer,rc)          
                 state                           := sIDLE
             }
         }
     }
 
-       /* class ila_timely(seq:Seq[Data]) extends BaseILA(seq)
+        class ila_timely(seq:Seq[Data]) extends BaseILA(seq)
         val inst_ila_timely = Module(new ila_timely(Seq(
             state,
             new_rtt,
@@ -293,6 +293,6 @@ class Timely() extends Module{
         )))
 
         inst_ila_timely.connect(clock)
-*/
+
 }
 

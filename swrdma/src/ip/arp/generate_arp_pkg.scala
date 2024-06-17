@@ -17,9 +17,9 @@ class generate_arp_pkg extends Module{
         val myip             =   Input(UInt(32.W))
 	})
 
-    Collector.fire(io.replymeta)
-    Collector.fire(io.requestmeta)
-    Collector.fire(io.data_out)
+    // Collector.fire(io.replymeta)
+    // Collector.fire(io.requestmeta)
+    // Collector.fire(io.data_out)
 
     io.replymeta.ready      := io.data_out.ready
     io.requestmeta.ready    := !io.replymeta.valid & io.data_out.ready

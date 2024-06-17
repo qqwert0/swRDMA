@@ -6,10 +6,12 @@ import chisel3.util._
 import common.axi._
 import common.storage._
 import chisel3.experimental.{DataMirror, Direction, requireIsChiselType}
+import common.Collector
 
 class arp_table extends Module{
     val io = IO(new Bundle{
         val arpinsert        =   Flipped(Decoupled(UInt(81.W)))
+        val arpinsert1       =   Flipped(Decoupled(UInt(81.W)))
         val arp_req1         =   Flipped(Decoupled(UInt(32.W)))
         val arp_req2         =   Flipped(Decoupled(UInt(32.W)))
         val arp_rsp1         =   Decoupled(new mac_out)
@@ -19,6 +21,13 @@ class arp_table extends Module{
         val myip             =   Input(UInt(32.W))
 	})
     
+    Collector.fire(io.arpinsert)
+    Collector.fire(io.arpinsert1)
+    Collector.fire(io.arp_req1)
+    Collector.fire(io.arp_rsp1)
+    Collector.fire(io.arp_req2)
+    Collector.fire(io.arp_rsp2)
+
     val rsp_fifo1           = XQueue(new mac_out(), entries=16)
     val rsp_fifo2           = XQueue(new mac_out(), entries=16)
     val requestmeta_fifo    = XQueue(UInt(32.W), entries=16)
@@ -33,8 +42,9 @@ class arp_table extends Module{
 
     val temp                = RegInit(UInt(32.W), 0.U)
     io.arpinsert.ready      := 1.U
-    io.arp_req1.ready       := !io.arpinsert.valid.asBool() & (!rsp_fifo1.io.almostfull) & (!requestmeta_fifo.io.almostfull)
-    io.arp_req2.ready       := !io.arpinsert.valid.asBool() & !io.arp_req1.valid.asBool() & (!rsp_fifo2.io.almostfull) & (!requestmeta_fifo.io.almostfull)
+    io.arpinsert1.ready     := 1.U
+    io.arp_req1.ready       := !io.arpinsert.valid.asBool() & !io.arpinsert1.valid.asBool() & (!rsp_fifo1.io.almostfull) & (!requestmeta_fifo.io.almostfull)
+    io.arp_req2.ready       := !io.arpinsert.valid.asBool() & !io.arpinsert1.valid.asBool() & !io.arp_req1.valid.asBool() & (!rsp_fifo2.io.almostfull) & (!requestmeta_fifo.io.almostfull)
 
     ToZero(rsp_fifo1.io.in.valid)
     ToZero(rsp_fifo1.io.in.bits)
@@ -53,6 +63,11 @@ class arp_table extends Module{
         arp_table.io.data_in_a  := io.arpinsert.bits
         arp_table.io.wr_en_a    := 1.U
         arp_table.io.addr_a     := io.arpinsert.bits(31,24)
+        state                   := sIDLE
+    }.elsewhen(io.arpinsert1.fire){
+        arp_table.io.data_in_a  := io.arpinsert1.bits
+        arp_table.io.wr_en_a    := 1.U
+        arp_table.io.addr_a     := io.arpinsert1.bits(31,24)
         state                   := sIDLE
     }.elsewhen(io.arp_req1.fire){
         arp_table.io.addr_b     := io.arp_req1.bits(31,24)

@@ -26,6 +26,7 @@ class HeadAdd() extends Module{
 	Collector.fire(io.reth_data_in)
 	Collector.fire(io.aeth_data_in)
 	Collector.fire(io.raw_data_in)
+	Collector.fire(io.tx_data_out)
 	Collector.fire(io.conn_state)
 
 	val IP_HEADER_HIGH = CONFIG.IP_HEADER_LEN -1
@@ -56,17 +57,21 @@ class HeadAdd() extends Module{
 			}
 		}
 		is(s_head){
-			when(io.tx_data_out.fire && io.tx_data_out.bits.last =/= 1.U ){
-				state := s_payload
-			}.otherwise{
-				state := s_meta
-			}
+			when(io.tx_data_out.fire){
+				when(io.tx_data_out.bits.last =/= 1.U){
+					state := s_payload
+				}.otherwise{
+					state := s_meta
+				}
+			} 
 		}
 		is(s_payload){
-			when(io.tx_data_out.fire&& io.tx_data_out.bits.last === 1.U){
-				state := s_meta
-			}.otherwise{
-				state := s_payload
+			when(io.tx_data_out.fire){
+				when(io.tx_data_out.bits.last =/= 1.U){
+					state := s_payload
+				}.otherwise{
+					state := s_meta
+				}				
 			}
 		}	
 	}

@@ -29,9 +29,9 @@ class process_arp_pkg extends Module{
   	// mod_arp_proc.connect(clock) 
 
 
-    Collector.fire(io.data_in)
-    Collector.fire(io.replymeta)
-    Collector.fire(io.arpinsert)
+    // Collector.fire(io.data_in)
+    // Collector.fire(io.replymeta)
+    // Collector.fire(io.arpinsert)
     io.data_in.ready     := io.replymeta.ready & io.arpinsert.ready
     val last             = RegInit(UInt(1.W), 1.U)
     io.replymeta.bits    := 0.U

@@ -34,6 +34,7 @@ class PRDMA() extends Module{
 
         val local_ip_address    = Input(UInt(32.W))
         val cpu_started         = Input(Bool())
+        val tx_delay            = Input(UInt(32.W))
         val axi                 = Vec(2,(new AXI(33, 256, 6, 0, 4)))
 	})
 
@@ -67,13 +68,13 @@ class PRDMA() extends Module{
     val cus_head_proc = Module(new CusHeadProcess())
 
 
-    val rx_cus_router      = SerialRouter(new AXIS(512), 6)
-    val rshift1 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN1/8,CONFIG.DATA_WIDTH))
-    val rshift2 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN2/8,CONFIG.DATA_WIDTH))
-    val rshift3 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN3/8,CONFIG.DATA_WIDTH))  
-    val rshift4 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN4/8,CONFIG.DATA_WIDTH))
-    val rshift5 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN5/8,CONFIG.DATA_WIDTH))
-    val rx_cus_arbiter      = SerialArbiter(new AXIS(512), 6)
+    // val rx_cus_router      = SerialRouter(new AXIS(512), 6)
+    val rshift1 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN/8,CONFIG.DATA_WIDTH))
+    // val rshift2 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN2/8,CONFIG.DATA_WIDTH))
+    // val rshift3 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN3/8,CONFIG.DATA_WIDTH))  
+    // val rshift4 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN4/8,CONFIG.DATA_WIDTH))
+    // val rshift5 = Module(new RSHIFT(CONFIG.SWRDMA_HEADER_LEN5/8,CONFIG.DATA_WIDTH))
+    // val rx_cus_arbiter      = SerialArbiter(new AXIS(512), 6)
 
     val rx_dispatch = Module(new RxDispatch())
     val pkg_drop = Module(new PkgDrop())
@@ -82,18 +83,18 @@ class PRDMA() extends Module{
 
     val handle_tx = Module(new HandleTx())
     val schedule = Module(new Schedule())
-    val tx_cc = Module(new TX_CC())
+    val tx_cc = Module(new TimelyTx())
 
     val tx_event_arbiter = XArbiter(new Event_meta(),2)
     val tx_dispatch = Module(new TxDispatch())
 
-    val tx_cus_router      = SerialRouter(new AXIS(512), 6)
-    val lshift1 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN1/8,CONFIG.DATA_WIDTH))
-    val lshift2 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN2/8,CONFIG.DATA_WIDTH))
-    val lshift3 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN3/8,CONFIG.DATA_WIDTH))  
-    val lshift4 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN4/8,CONFIG.DATA_WIDTH))
-    val lshift5 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN5/8,CONFIG.DATA_WIDTH))
-    val tx_cus_arbiter      = SerialArbiter(new AXIS(512), 6)
+    // val tx_cus_router      = SerialRouter(new AXIS(512), 6)
+    val lshift1 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN/8,CONFIG.DATA_WIDTH))
+    // val lshift2 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN2/8,CONFIG.DATA_WIDTH))
+    // val lshift3 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN3/8,CONFIG.DATA_WIDTH))  
+    // val lshift4 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN4/8,CONFIG.DATA_WIDTH))
+    // val lshift5 = Module(new LSHIFT(CONFIG.SWRDMA_HEADER_LEN5/8,CONFIG.DATA_WIDTH))
+    // val tx_cus_arbiter      = SerialArbiter(new AXIS(512), 6)
 
 
     val reth_lshift = Module(new LSHIFT(56,CONFIG.DATA_WIDTH)) 
@@ -128,22 +129,9 @@ class PRDMA() extends Module{
     
 
 	cus_head_proc.io.meta_in	        	<> head_process.io.meta_out
-	cus_head_proc.io.rx_data_out	    	<> rx_cus_router.io.in
+	cus_head_proc.io.rx_data_out	    	<> rshift1.io.in
 	cus_head_proc.io.swrdma_head_choice     := tx_cc.io.user_header_len
-
-
-    rx_cus_router.io.idx                    := tx_cc.io.user_header_len
-    rx_cus_router.io.out(0)                 <> rx_cus_arbiter.io.in(0)
-    rx_cus_router.io.out(1)                 <> rshift1.io.in
-    rx_cus_router.io.out(2)                 <> rshift2.io.in
-    rx_cus_router.io.out(3)                 <> rshift3.io.in
-    rx_cus_router.io.out(4)                 <> rshift4.io.in
-    rx_cus_router.io.out(5)                 <> rshift5.io.in
-    rx_cus_arbiter.io.in(1)                 <> rshift1.io.out
-    rx_cus_arbiter.io.in(2)                 <> rshift2.io.out
-    rx_cus_arbiter.io.in(3)                 <> rshift3.io.out
-    rx_cus_arbiter.io.in(4)                 <> rshift4.io.out
-    rx_cus_arbiter.io.in(5)                 <> rshift5.io.out
+    tx_cc.io.tx_delay                       := io.tx_delay
 
 
 
@@ -155,7 +143,7 @@ class PRDMA() extends Module{
 	rx_dispatch.io.event_meta_out           <> handle_tx.io.pkg_meta_in
 
 	pkg_drop.io.meta_in	        	        <> rx_dispatch.io.drop_meta_out
-	pkg_drop.io.rx_data_in			        <> rx_cus_arbiter.io.out
+	pkg_drop.io.rx_data_in			        <> rshift1.io.out
 	pkg_drop.io.rx_data_out			        <> io.m_mem_write_data
 
 	data_writer.io.meta_in	                <> rx_dispatch.io.dma_meta_out 	
@@ -203,20 +191,8 @@ class PRDMA() extends Module{
 
 	cc_table.io.cc_init                     <> io.cc_init
 
-    tx_cus_router.io.in                     <> io.s_mem_read_data
-    tx_cus_router.io.idx                    := tx_cc.io.user_header_len
-    tx_cus_router.io.out(0)                 <> tx_cus_arbiter.io.in(0)
-    tx_cus_router.io.out(1)                 <> lshift1.io.in
-    tx_cus_router.io.out(2)                 <> lshift2.io.in
-    tx_cus_router.io.out(3)                 <> lshift3.io.in
-    tx_cus_router.io.out(4)                 <> lshift4.io.in
-    tx_cus_router.io.out(5)                 <> lshift5.io.in
-    tx_cus_arbiter.io.in(1)                 <> lshift1.io.out
-    tx_cus_arbiter.io.in(2)                 <> lshift2.io.out
-    tx_cus_arbiter.io.in(3)                 <> lshift3.io.out
-    tx_cus_arbiter.io.in(4)                 <> lshift4.io.out
-    tx_cus_arbiter.io.in(5)                 <> lshift5.io.out
-    tx_cus_arbiter.io.out                   <> user_add.io.data_in
+    lshift1.io.in                           <> io.s_mem_read_data
+    lshift1.io.out                          <> user_add.io.data_in
  
 	user_add.io.meta_out                    <> head_add.io.meta_in
     user_add.io.reth_data_out               <> reth_lshift.io.in 

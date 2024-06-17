@@ -41,7 +41,8 @@ object CONFIG{
     def IBH_HEADER_LEN = 96
     def RETH_HEADER_LEN = 128
     def AETH_HEADER_LEN = 32
-    def SWRDMA_HEADER_LEN = 32
+    def SWRDMA_HEADER_CHOICE = 2
+    def SWRDMA_HEADER_LEN = 64
     def SWRDMA_HEADER_LEN1 = 32
     def SWRDMA_HEADER_LEN2 = 64
     def SWRDMA_HEADER_LEN3 = 128
@@ -151,9 +152,9 @@ object  IB_OPCODE extends ChiselEnum{
 object TIMELY{
     def alfa = 57344 //1<<16 *7/8
     def belta = 52428 //1<<16*4/5
-    def minRTT = 540
+    def minRTT = 630
     def Rai = 5
-    def Tlow = 550
+    def Tlow = 650
     def Thigh = 2000
     def DIVEDE_RATE_U = 3686400
     def USER_TABLE_SIZE = 3
@@ -164,10 +165,11 @@ object DCQCN{
     def g = 256 //1<<16*4/5
     def one_g = 65280 //1-g
     def T_55us = 12375
+    def T_50us = 11250
     def Rai = 5
     def BC_expires = 10485760
     def DIVEDE_RATE_U = 3686400
-    def USER_TABLE_SIZE = 3
+    def USER_TABLE_SIZE = 9
 }
 
 

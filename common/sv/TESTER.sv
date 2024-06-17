@@ -135,7 +135,7 @@ module OUT #(int width)(
 endmodule
 
 
-module DMA #(int width = 512,int READ_DELAY = 10, int depth =16384)( 
+module DMA #(int width = 512,int READ_DELAY = 200, int depth =16384)( 
 	//for a HBM channel, depth=256*1024*1024/32 = 8388608
 	input wire          clock,
 	input wire          reset,

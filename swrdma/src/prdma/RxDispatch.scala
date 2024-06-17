@@ -29,6 +29,11 @@ class RxDispatch() extends Module{
 	Collector.fire(io.cc_meta_out)
 	Collector.fire(io.event_meta_out)
 
+	Collector.report(io.drop_meta_out.ready)
+	Collector.report(io.cc_meta_out.ready)
+	Collector.report(io.dma_meta_out.ready)
+	Collector.report(io.event_meta_out.ready)
+
 	val meta_fifo = XQueue(new Pkg_meta(), entries=16)
 	io.meta_in 		    <> meta_fifo.io.in
 
@@ -44,6 +49,11 @@ class RxDispatch() extends Module{
 
 	val sIDLE :: sRSP :: sDATA :: Nil = Enum(3)
 	val state                   = RegInit(sIDLE)
+
+	val state_reg				= Reg(UInt(32.W))
+	state_reg					:= state
+
+	Collector.report(state_reg)
 
 	meta_fifo.io.out.ready                    := (state === sIDLE) & io.conn_req.ready
     conn_rsp_fifo.io.out.ready                := (state === sRSP)

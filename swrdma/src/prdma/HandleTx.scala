@@ -21,6 +21,7 @@ class HandleTx() extends Module{
 		val event_meta_out		= (Decoupled(new Event_meta()))
 	})
 
+
 	Collector.fire(io.app_meta_in)
     Collector.fire(io.pkg_meta_in)
     Collector.fire(io.cc_meta_in)
@@ -66,10 +67,22 @@ class HandleTx() extends Module{
 	switch(state){
 		is(sIDLE){
 			when(cc_fifo.io.out.fire){
-				when(PKG_JUDGE.INFER_PKG(pkg_fifo.io.out.bits.op_code)){
+				when(PKG_JUDGE.INFER_PKG(cc_fifo.io.out.bits.op_code)){
 					io.event_meta_out.valid			:= 1.U
 					io.event_meta_out.bits.event_gen(cc_fifo.io.out.bits.op_code, cc_fifo.io.out.bits.qpn, cc_fifo.io.out.bits.psn, cc_fifo.io.out.bits.ecn, cc_fifo.io.out.bits.vaddr, cc_fifo.io.out.bits.msg_length, cc_fifo.io.out.bits.pkg_length, cc_fifo.io.out.bits.user_define)
-					io.event_meta_out.bits.len_log	:= 5.U
+					when(cc_fifo.io.out.bits.pkg_length >2048.U){
+						io.event_meta_out.bits.len_log	:= 6.U
+					}.elsewhen(cc_fifo.io.out.bits.pkg_length >1024.U){
+						io.event_meta_out.bits.len_log	:= 5.U
+					}.elsewhen(cc_fifo.io.out.bits.pkg_length >512.U){
+						io.event_meta_out.bits.len_log	:= 4.U
+					}.elsewhen(cc_fifo.io.out.bits.pkg_length >256.U){
+						io.event_meta_out.bits.len_log	:= 3.U
+					}.elsewhen(cc_fifo.io.out.bits.pkg_length >128.U){
+						io.event_meta_out.bits.len_log	:= 2.U
+					}.elsewhen(cc_fifo.io.out.bits.pkg_length >64.U){
+						io.event_meta_out.bits.len_log	:= 1.U
+					}
 				}.otherwise{
 					io.priori_meta_out.valid			:= 1.U
 					io.priori_meta_out.bits.event_gen(cc_fifo.io.out.bits.op_code, cc_fifo.io.out.bits.qpn, cc_fifo.io.out.bits.psn, cc_fifo.io.out.bits.ecn, cc_fifo.io.out.bits.vaddr, cc_fifo.io.out.bits.msg_length, cc_fifo.io.out.bits.pkg_length, cc_fifo.io.out.bits.user_define)
@@ -78,7 +91,7 @@ class HandleTx() extends Module{
 				pkg_meta							:= pkg_fifo.io.out.bits
 				when(PKG_JUDGE.WRITE_PKG(pkg_fifo.io.out.bits.op_code)){
 					io.priori_meta_out.valid		:= 1.U
-					io.priori_meta_out.bits.ack_gen(pkg_fifo.io.out.bits.qpn, pkg_fifo.io.out.bits.psn, pkg_fifo.io.out.bits.user_define)				
+					io.priori_meta_out.bits.ack_gen(pkg_fifo.io.out.bits.qpn, pkg_fifo.io.out.bits.psn, pkg_fifo.io.out.bits.user_define)	
 				}.elsewhen(pkg_fifo.io.out.bits.op_code === IB_OPCODE.RC_READ_REQUEST){
 					io.event_meta_out.valid			:= 1.U
 					when(pkg_fifo.io.out.bits.msg_length > CONFIG.MTU.U){
@@ -93,7 +106,19 @@ class HandleTx() extends Module{
 						vaddr                       := pkg_fifo.io.out.bits.vaddr
 						length                      := pkg_fifo.io.out.bits.msg_length
 						io.event_meta_out.bits.remote_event(IB_OPCODE.RC_READ_RESP_ONLY, pkg_fifo.io.out.bits.qpn, pkg_fifo.io.out.bits.psn, pkg_fifo.io.out.bits.vaddr, pkg_fifo.io.out.bits.msg_length) 
-						io.event_meta_out.bits.len_log	:= 5.U					
+						when(pkg_fifo.io.out.bits.msg_length >2048.U){
+							io.event_meta_out.bits.len_log	:= 6.U
+						}.elsewhen(pkg_fifo.io.out.bits.msg_length >1024.U){
+							io.event_meta_out.bits.len_log	:= 5.U
+						}.elsewhen(pkg_fifo.io.out.bits.msg_length >512.U){
+							io.event_meta_out.bits.len_log	:= 4.U
+						}.elsewhen(pkg_fifo.io.out.bits.msg_length >256.U){
+							io.event_meta_out.bits.len_log	:= 3.U
+						}.elsewhen(pkg_fifo.io.out.bits.msg_length >128.U){
+							io.event_meta_out.bits.len_log	:= 2.U
+						}.elsewhen(pkg_fifo.io.out.bits.msg_length >64.U){
+							io.event_meta_out.bits.len_log	:= 1.U
+						}						
 					}					
 				}
 			}.elsewhen(app_fifo.io.out.fire){
@@ -119,7 +144,19 @@ class HandleTx() extends Module{
                         raddr                       := app_fifo.io.out.bits.remote_vaddr
                         length                      := app_fifo.io.out.bits.length
                         io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_ONLY, app_fifo.io.out.bits.qpn, app_fifo.io.out.bits.local_vaddr, app_fifo.io.out.bits.remote_vaddr, app_fifo.io.out.bits.length, app_fifo.io.out.bits.length) 
-						io.event_meta_out.bits.len_log	:= 5.U						
+						when(app_fifo.io.out.bits.length >2048.U){
+							io.event_meta_out.bits.len_log	:= 6.U
+						}.elsewhen(app_fifo.io.out.bits.length >1024.U){
+							io.event_meta_out.bits.len_log	:= 5.U
+						}.elsewhen(app_fifo.io.out.bits.length >512.U){
+							io.event_meta_out.bits.len_log	:= 4.U
+						}.elsewhen(app_fifo.io.out.bits.length >256.U){
+							io.event_meta_out.bits.len_log	:= 3.U
+						}.elsewhen(app_fifo.io.out.bits.length >128.U){
+							io.event_meta_out.bits.len_log	:= 2.U
+						}.elsewhen(app_fifo.io.out.bits.length >64.U){
+							io.event_meta_out.bits.len_log	:= 1.U
+						}						
                     }
                     io.event_meta_out.valid         := 1.U
                 }
@@ -140,7 +177,19 @@ class HandleTx() extends Module{
                     length                      := 0.U
                     psn                         := 0.U
                     io.event_meta_out.bits.remote_event(IB_OPCODE.RC_READ_RESP_LAST, app_meta.qpn, psn, vaddr, length)
-					io.event_meta_out.bits.len_log	:= 5.U					
+					when(length >2048.U){
+						io.event_meta_out.bits.len_log	:= 6.U
+					}.elsewhen(length >1024.U){
+						io.event_meta_out.bits.len_log	:= 5.U
+					}.elsewhen(length >512.U){
+						io.event_meta_out.bits.len_log	:= 4.U
+					}.elsewhen(length >256.U){
+						io.event_meta_out.bits.len_log	:= 3.U
+					}.elsewhen(length >128.U){
+						io.event_meta_out.bits.len_log	:= 2.U
+					}.elsewhen(length >64.U){
+						io.event_meta_out.bits.len_log	:= 1.U
+					}					
                 }  
                 io.event_meta_out.valid      := 1.U
 			}
@@ -160,7 +209,19 @@ class HandleTx() extends Module{
                     raddr                       := 0.U
                     length                      := 0.U
                     io.event_meta_out.bits.local_event(IB_OPCODE.RC_WRITE_LAST, app_meta.qpn, laddr, raddr, length, length)
-					io.event_meta_out.bits.len_log	:= 5.U	
+					when(length >2048.U){
+						io.event_meta_out.bits.len_log	:= 6.U
+					}.elsewhen(length >1024.U){
+						io.event_meta_out.bits.len_log	:= 5.U
+					}.elsewhen(length >512.U){
+						io.event_meta_out.bits.len_log	:= 4.U
+					}.elsewhen(length >256.U){
+						io.event_meta_out.bits.len_log	:= 3.U
+					}.elsewhen(length >128.U){
+						io.event_meta_out.bits.len_log	:= 2.U
+					}.elsewhen(length >64.U){
+						io.event_meta_out.bits.len_log	:= 1.U
+					}	
                 }
                 io.event_meta_out.valid         := 1.U  
 			}

@@ -58,7 +58,7 @@ class MsgSend() extends Module{
                 io.app_meta_out.bits.qpn        := c_qpn
                 io.app_meta_out.bits.local_vaddr:= meta_reg.local_vaddr
                 io.app_meta_out.bits.remote_vaddr   := meta_reg.remote_vaddr
-                io.app_meta_out.bits.length     := 2048.U
+                io.app_meta_out.bits.length     := meta_reg.length
                 state                           := sJUDGE
             }                 
         }         

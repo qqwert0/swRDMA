@@ -17,6 +17,12 @@ class CONN_TABLE() extends Module{
         val conn2rx_rsp	    = (Decoupled(new Conn_state()))
 	})
 
+	Collector.fire(io.rx2conn_req)
+    Collector.fire(io.tx2conn_req)
+    Collector.fire(io.conn_init)
+    Collector.fire(io.conn2tx_rsp)
+    Collector.fire(io.conn2rx_rsp)
+
 
     val conn_tx_fifo = XQueue(new Conn_req(), entries=16)
     val conn_rx_fifo = XQueue(new Conn_req(), entries=16)

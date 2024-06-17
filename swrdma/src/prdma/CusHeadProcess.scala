@@ -5,6 +5,7 @@ import common.axi._
 import chisel3._
 import chisel3.util._
 import chisel3.experimental.ChiselEnum
+import common._
 import common.Collector
 import common.connection._
 
@@ -17,6 +18,12 @@ class CusHeadProcess() extends Module{
 		val swrdma_head_choice	= Input(UInt(3.W))
 	})
 
+	Collector.fire(io.rx_data_in)
+	Collector.fire(io.meta_in)	
+
+	Collector.fire(io.rx_data_out)
+	Collector.fire(io.meta_out)	
+
 	val rx_data_fifo    = XQueue(new AXIS(512),64)
 	rx_data_fifo.io.in <> io.rx_data_in
 	val meta_fifo = XQueue(new Pkg_meta(),64)
@@ -26,24 +33,36 @@ class CusHeadProcess() extends Module{
 	val state = RegInit(s_head)
 
 
-    
+	ToZero(io.meta_out.valid)
+	ToZero(io.rx_data_out.valid)
+
 	switch(state){
 		is(s_head){
-			when(rx_data_fifo.io.out.fire && rx_data_fifo.io.out.bits.last =/= 1.U ){
-				state := s_payload
-			}.otherwise{
-				state := s_head
+			when(rx_data_fifo.io.out.fire & meta_fifo.io.out.fire){
+				io.meta_out.valid	:= 1.U
+				when(meta_fifo.io.out.bits.pkg_length === (CONFIG.SWRDMA_HEADER_LEN/8).U){
+					io.rx_data_out.valid	:= 0.U
+				}.otherwise{
+					io.rx_data_out.valid	:= 1.U
+				}
+				when(rx_data_fifo.io.out.bits.last =/= 1.U){
+					state := s_payload
+				}.otherwise{
+					state := s_head
+				}
 			}
 		}
 		is(s_payload){
-			when(rx_data_fifo.io.out.fire&& rx_data_fifo.io.out.bits.last === 1.U){
-				state := s_head
-			}.otherwise{
-				state := s_payload
+			when(rx_data_fifo.io.out.fire){
+				io.rx_data_out.valid	:= 1.U
+				when(rx_data_fifo.io.out.bits.last =/= 1.U){
+					state := s_payload
+				}.otherwise{
+					state := s_head
+				}
 			}
 		}	
 	}
-
 
 	io.meta_out.bits.op_code 	 := meta_fifo.io.out.bits.op_code
 	io.meta_out.bits.qpn     	 := meta_fifo.io.out.bits.qpn
@@ -84,9 +103,9 @@ class CusHeadProcess() extends Module{
 	val all_valid = rx_data_fifo.io.out.valid && meta_fifo.io.out.valid
 	io.rx_data_out.bits       := rx_data_fifo.io.out.bits
 
-	io.meta_out.valid         := (state === s_head )  && all_ready && all_valid
+	// io.meta_out.valid         := (state === s_head )  && all_ready && all_valid
 	meta_fifo.io.out.ready    := (state === s_head) &&  all_ready && all_valid
-	io.rx_data_out.valid      := ( rx_data_fifo.io.out.valid && state === s_payload )|| (state === s_head && all_ready && all_valid)
+	// io.rx_data_out.valid      := ( rx_data_fifo.io.out.valid && state === s_payload )|| (state === s_head && all_ready && all_valid)
 	rx_data_fifo.io.out.ready := (io.rx_data_out.ready && state === s_payload )|| (state === s_head && all_ready && all_valid)
 
 

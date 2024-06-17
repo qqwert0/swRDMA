@@ -19,6 +19,11 @@ class CCTable() extends Module{
         // val tx_lock         = Output(UInt(16.W))
 	})
 
+	Collector.fire(io.rx2cc_req)
+    Collector.fire(io.tx2cc_req)
+    Collector.fire(io.cc_init)
+    Collector.fire(io.cc2tx_rsp)
+    Collector.fire(io.cc2rx_rsp)
 
     val cc_tx_fifo = XQueue(new CC_req(), entries=16)
     val cc_rx_fifo = XQueue(new CC_req(), entries=16)
@@ -83,7 +88,8 @@ class CCTable() extends Module{
                     cc_table.io.data_in_a                 := cc_request.cc_state
                     cc_table.io.data_in_a.timer           := cc_request.cc_state.user_define(63,32)
                     cc_table.io.data_in_a.rate            := cc_table.io.data_out_b.rate
-                    cc_table.io.data_in_a.divide_rate     := cc_table.io.data_out_b.divide_rate                  
+                    cc_table.io.data_in_a.divide_rate     := cc_table.io.data_out_b.divide_rate  
+                    cc_table.io.data_in_a.user_define     := cc_table.io.data_out_b.user_define                 
                     state                                   := sIDLE
                 }.otherwise{
                     io.cc2tx_rsp.valid 		    := 1.U 
@@ -115,7 +121,7 @@ class CCTable() extends Module{
                 }.otherwise{
                     io.cc2rx_rsp.valid 		    := 1.U 
                     io.cc2rx_rsp.bits 		    <> cc_table.io.data_out_b
-                    io.cc2rx_rsp.bits.user_define             := Cat(cc_table.io.data_out_b.divide_rate,cc_table.io.data_out_b.timer,cc_table.io.data_out_b.rate)                      
+                    // io.cc2rx_rsp.bits.user_define             := Cat(cc_table.io.data_out_b.divide_rate,cc_table.io.data_out_b.timer,cc_table.io.data_out_b.rate)                      
                 }
                 when(cc_request.lock === true.B){
                     cc_table.io.addr_a                    := cc_request.qpn

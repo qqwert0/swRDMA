@@ -13,7 +13,7 @@ import mini.junctions._
 
 
 
-class TX_CC() extends Module{
+class TimelyTx() extends Module{
 	val io = IO(new Bundle{
         val cc_meta_in      = Flipped(Decoupled(new Event_meta()))
         val cc_state_in     = Flipped(Decoupled(new CC_state()))
@@ -21,8 +21,8 @@ class TX_CC() extends Module{
         val cc_meta_out     = (Decoupled(new Event_meta()))
 
         val cpu_started     = Input(Bool())
-        val user_header_len = Output(UInt(32.W))
         val tx_delay        = Input(UInt(32.W))
+        val user_header_len = Output(UInt(32.W))
         val axi             = new AXI(33, 256, 6, 0, 4)
 
 	})
@@ -32,37 +32,10 @@ class TX_CC() extends Module{
     Collector.fire(io.cc_state_in)
     Collector.fire(io.cc_req)
     Collector.fire(io.cc_meta_out)
-    
 
+	io.axi <> DontCare
 
-	val cpu_started = RegNext(io.cpu_started)
-	// riscv-mini
-	val config = MiniConfig()
-	val tx_core = withClockAndReset(clock, cpu_started.asBool) { 
-		Module(new Tile(
-		coreParams = config.core, 
-		bramParams = config.bram,
-		nastiParams = config.nasti, 
-		cacheParams = config.cache,
-        file = "inst_tx.mem"
-		))
-	}
-
-    Collector.report(tx_core.io.rdma_print_addr)
-	Collector.report(tx_core.io.rdma_print_addr)
-	Collector.report(tx_core.io.rdma_print_string_num)
-	Collector.report(tx_core.io.rdma_print_string_len)
-	Collector.report(tx_core.io.rdma_trap)
-    Collector.report(tx_core.io.event_recv_cnt)
-
-	io.axi.aw <> tx_core.io.nasti.aw
-	io.axi.w <> tx_core.io.nasti.w
-	io.axi.ar <> tx_core.io.nasti.ar
-	io.axi.r <> tx_core.io.nasti.r
-	io.axi.b <> tx_core.io.nasti.b
-
-	tx_core.io.host := DontCare
-    io.user_header_len   := tx_core.io.user_header_len
+    io.user_header_len   := CONFIG.SWRDMA_HEADER_CHOICE.U
 
 
     /////////////////////////////////
@@ -85,16 +58,37 @@ class TX_CC() extends Module{
     Collector.report(state_reg)
     // val pkg_meta_addr_base      = RegInit(0.U(5.W))
 
-    // pkg_meta_addr_base          := tx_core.io.user_table_size
+
+    val Timer = RegInit(0.U(64.W))
+    val cpu_started = RegNext(io.cpu_started)
+    val cc_timer = RegInit(0.U(32.W))
+    val time_diff = RegInit(0.U(32.W))
+    val divide_rate = RegInit(0.U(32.W))
+    val delay = RegInit(0.U(32.W))
+    val tx_delay = RegNext(io.tx_delay)
+
+
+
+    when(!cpu_started){
+        Timer       := Timer + 1.U;
+    }.otherwise{
+        Timer       := 0.U
+    }
+
+    
+
+    when(state === sWR_CORE){
+        delay   := 0.U
+    }.elsewhen(state === sWAIT){
+        delay   := delay + 1.U
+    }
+
+
 
     cc_meta_fifo.io.out.ready               := (state === sIDLE) & (io.cc_req.ready)
     cc_state_fifo.io.out.ready              := (state === sCC_STATE) & (io.cc_req.ready)
 
-    // ToZero(tx_core.io.cmd)
-    // ToZero(tx_core.io.addr)
-    // ToZero(tx_core.io.data_in)
-    ToZero(tx_core.io.has_event_wr)
-    ToZero(tx_core.io.user_csr_wr)
+
     ToZero(io.cc_meta_out.valid)
     ToZero(io.cc_meta_out.bits)
     ToZero(io.cc_req.valid)
@@ -126,48 +120,45 @@ class TX_CC() extends Module{
             }                 
         }            
         is(sWR_CORE){
-            when((tx_core.io.has_event_rd === 0.U)){
-                tx_core.io.has_event_wr             := 1.U
-                for(i <- 0 until TIMELY.USER_TABLE_SIZE){
-                    tx_core.io.user_csr_wr(i+1)    := cc_reg.user_define(i*32+31,i*32)
-                }  
-                for(i <- 0 until 8){
-                    tx_core.io.user_csr_wr(i+4+TIMELY.USER_TABLE_SIZE)     := meta_reg.user_define(i*32+31,i*32)
-                }                 
-                tx_core.io.user_csr_wr(1+TIMELY.USER_TABLE_SIZE)           := meta_reg.op_code.asUInt
-                tx_core.io.user_csr_wr(2+TIMELY.USER_TABLE_SIZE)           := meta_reg.pkg_length
-                tx_core.io.user_csr_wr(3+TIMELY.USER_TABLE_SIZE)           := meta_reg.len_log
-                tx_core.io.user_csr_wr(0)          := cc_reg.credit
-                // tx_core.io.user_csr_wr(1)          := cc_reg.rate
-                // tx_core.io.user_csr_wr(2)          := cc_reg.timer
-                state                           := sWAIT
-            }                 
+            time_diff       := (Timer - cc_reg.user_define(63,32)) << 8.U;
+            cc_timer        := cc_reg.user_define(63,32)
+            divide_rate     := cc_reg.user_define(95,64) << meta_reg.len_log(4,0)
+            state                           := sWAIT                
         }
         is(sWAIT){
-            when(io.cc_meta_out.ready & io.cc_req.ready ){
+            when((time_diff > divide_rate)&&(delay >= tx_delay)){   
                 state                           := sDONE
             }
+            time_diff       := (Timer - cc_timer) << 8.U;
         }
         is(sDONE){
-            when((tx_core.io.has_event_rd === 0.U)&(tx_core.io.event_processed_cnt(0).asBool)){
                 io.cc_meta_out.valid            := 1.U
                 io.cc_meta_out.bits             := meta_reg
                 // io.cc_meta_out.bits.qpn         := tx_core.io.user_csr_rd(1.U+pkg_meta_addr_base)
-                io.cc_meta_out.bits.op_code     := IB_OPCODE.safe(tx_core.io.user_csr_rd(1+TIMELY.USER_TABLE_SIZE)(7,0))._1
-                io.cc_meta_out.bits.pkg_length  := tx_core.io.user_csr_rd(2+TIMELY.USER_TABLE_SIZE)
-                io.cc_meta_out.bits.header_len  := tx_core.io.user_header_len
-                io.cc_meta_out.bits.user_define := Cat(tx_core.io.user_csr_rd(8+TIMELY.USER_TABLE_SIZE),tx_core.io.user_csr_rd(7+TIMELY.USER_TABLE_SIZE),tx_core.io.user_csr_rd(6+TIMELY.USER_TABLE_SIZE),tx_core.io.user_csr_rd(5+TIMELY.USER_TABLE_SIZE),tx_core.io.user_csr_rd(4+TIMELY.USER_TABLE_SIZE)) 
+                io.cc_meta_out.bits.op_code     := meta_reg.op_code
+                io.cc_meta_out.bits.header_len  := (CONFIG.SWRDMA_HEADER_LEN/8).U
+                io.cc_meta_out.bits.user_define := Cat("h0".U,Timer) 
                 io.cc_req.valid                 := 1.U
                 io.cc_req.bits.is_wr            := true.B
                 io.cc_req.bits.lock             := false.B
                 io.cc_req.bits.qpn              := meta_reg.qpn
-                io.cc_req.bits.cc_state.credit  := tx_core.io.user_csr_rd(0)
-                // io.cc_req.bits.cc_state.rate    := tx_core.io.user_csr_rd(1) 
-                // io.cc_req.bits.cc_state.timer   := tx_core.io.user_csr_rd(2)  
-                io.cc_req.bits.cc_state.user_define := Cat(tx_core.io.user_csr_rd(11),tx_core.io.user_csr_rd(10),tx_core.io.user_csr_rd(9),tx_core.io.user_csr_rd(8),tx_core.io.user_csr_rd(7),tx_core.io.user_csr_rd(6),
-                                                            tx_core.io.user_csr_rd(5),tx_core.io.user_csr_rd(4),tx_core.io.user_csr_rd(3),tx_core.io.user_csr_rd(2),tx_core.io.user_csr_rd(1))          
+                io.cc_req.bits.cc_state.credit  := 0.U
+                io.cc_req.bits.cc_state.user_define := Cat("h0".U,cc_reg.divide_rate,Timer(31,0),cc_reg.rate)          
                 state                           := sIDLE
-            }
         }
     }
+
+	val len_log = WireInit(0.U(5.W))
+	len_log	:= meta_reg.len_log(4,0)
+
+        class ila_timelytx(seq:Seq[Data]) extends BaseILA(seq)
+        val inst_ila_timelytx = Module(new ila_timelytx(Seq(
+            state,
+            time_diff,
+            divide_rate,
+        )))
+
+        inst_ila_timelytx.connect(clock)
+
+
 }

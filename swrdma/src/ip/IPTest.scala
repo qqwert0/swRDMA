@@ -20,10 +20,17 @@ class IPTest extends Module{
         val m_mac_tx        =   Decoupled(new AXIS(512))
 		//arp req
         val arp_req         =   Flipped(Decoupled(UInt(32.W)))
+		val arpinsert       =   Flipped(Decoupled(UInt(81.W)))
         val arp_rsp         =   Decoupled(new mac_out)
 		//
 		val ip_address		= 	Input(UInt(32.W))
 	})
+
+		Collector.fire(io.s_mac_rx)
+		Collector.fire(io.m_mac_tx)
+		Collector.fire(io.s_ip_tx)
+		Collector.fire(io.m_roce_rx)	
+
 
 		val mac_address 	= RegInit(0.U(48.W))
 		val ip_address 		= RegInit(0.U(32.W))
@@ -47,7 +54,8 @@ class IPTest extends Module{
 		arbiter.io.in(1)						<> arp.io.net_tx
 		arbiter.io.out							<> io.m_mac_tx
    
-        arp.io.arp_req2                         <> io.arp_req
+        arp.io.arpinsert						<> io.arpinsert
+		arp.io.arp_req2                         <> io.arp_req
         arp.io.arp_rsp2                         <> io.arp_rsp
 		arp.io.mac_address						:= mac_address
 		arp.io.ip_address						:= ip_address

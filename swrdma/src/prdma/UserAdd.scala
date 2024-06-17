@@ -19,6 +19,13 @@ class UserAdd() extends Module{
 		val pkg_len			= Input(UInt(4.W))
 	})
 
+	Collector.fire(io.meta_in)
+	Collector.fire(io.data_in)
+	Collector.fire(io.meta_out)
+	Collector.fire(io.reth_data_out)
+	Collector.fire(io.aeth_data_out)	
+	Collector.fire(io.raw_data_out)		
+
 	val meta_fifo = XQueue(new Event_meta(), entries=16)
 	val data_fifo = XQueue(new AXIS(512), entries=16)
 	io.meta_in 		<> meta_fifo.io.in

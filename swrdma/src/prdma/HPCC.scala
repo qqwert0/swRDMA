@@ -12,7 +12,7 @@ import mini.core._
 import mini.junctions._
 
 
-class Dcqcn() extends Module{
+class HPCC() extends Module{
 	val io = IO(new Bundle{
         val cc_meta_in      = Flipped(Decoupled(new Pkg_meta()))
         val cc_state_in     = Flipped(Decoupled(new CC_state()))
@@ -41,7 +41,7 @@ class Dcqcn() extends Module{
 	io.axi <> DontCare
 
 
-    io.pkg_type_to_cc   := "h20fc0".U
+    io.pkg_type_to_cc   := "h20000".U
 
 
     /////////////////////////////////
@@ -57,7 +57,7 @@ class Dcqcn() extends Module{
     val meta_reg = RegInit(0.U.asTypeOf(new Pkg_meta()))
     val cc_reg = RegInit(0.U.asTypeOf(new CC_state()))
 
-	val sIDLE :: sCC_STATE :: sWR_CORE :: sWAIT :: sDONE :: sDATAPKT :: Nil = Enum(6)
+	val sIDLE :: sCC_STATE :: sWR_CORE :: sWAIT :: sDONE :: Nil = Enum(5)
 	val state                   = RegInit(sIDLE)
 
     cc_meta_fifo.io.out.ready               := (state === sIDLE) || (cc_meta_fifo.io.count>0.U)
@@ -70,17 +70,15 @@ class Dcqcn() extends Module{
     ToZero(io.cc_req.bits)    
 
 
-    val Timer = RegInit(0.U(64.W))
-    val ecn = RegInit(0.U(32.W))
-    val rate = RegInit(0.U(32.W))
-    val byte_count = RegInit(0.U(32.W))
-    val BC = RegInit(0.U(32.W))
-    val T = RegInit(0.U(32.W))
-    val last_time = RegInit(0.U(64.W))
-    val rt = RegInit(0.U(32.W))
-    val ecn_time = RegInit(0.U(64.W))
-
-    val alfa    = RegInit(0.U(32.W))
+    val Timer = RegInit(0.U(32.W))
+    val ts = RegInit(0.U(32.W))
+    val rate = RegInit(0.S(32.W))
+    val new_rtt = RegInit(0.S(32.W))
+    val prev_rtt = RegInit(540.S(32.W))
+    val rtt_diff = RegInit(0.S(32.W))
+    val new_rtt_diff = RegInit(0.S(32.W))
+    val alfa    = RegInit(TIMELY.alfa.S(32.W))
+    val belta    = RegInit(TIMELY.belta.S(32.W))
     val tmp_b = RegInit(0.S(32.W))
     val mul_a = RegInit(0.S(64.W))
     val mul_b = RegInit(0.S(64.W))
@@ -98,7 +96,6 @@ class Dcqcn() extends Module{
     val rc1 = RegInit(0.U(32.W))
     val rc2 = RegInit(0.U(32.W))
     val rc3 = RegInit(0.U(64.W))
-    val rt1 = RegInit(0.U(32.W))
     val rc = RegInit(0.U(32.W))
     val rc_reg = RegInit(0.U(32.W))
     val cc_timer = RegInit(0.U(32.W))
@@ -128,62 +125,107 @@ class Dcqcn() extends Module{
 
     //cycle 0
     when(state === sWR_CORE){
-        ecn             := meta_reg.user_define(31,0)
-        rate            := cc_reg.user_define(31,0)
+        ts              := meta_reg.user_define(31,0)
+        rate            := cc_reg.user_define(31,0).asTypeOf(SInt())
         cc_timer        := cc_reg.user_define(63,32)
-        byte_count      := cc_reg.user_define(127,96)
-        BC              := cc_reg.user_define(159,128) 
-        T               := cc_reg.user_define(191,160)
-        last_time       := cc_reg.user_define(255,192)
-        rt              := cc_reg.user_define(287,256)
-        alfa            := cc_reg.user_define(319,288)
-    }.elsewhen((cal_valid_shift(7) === 1.U)&(ecn=== "hffffffff".U)){
-        alfa            := (mul_b.asUInt >> 16.U) + DCQCN.g.U
-    }.elsewhen((cal_valid_shift(7) === 1.U)&((Timer - last_time)>=DCQCN.T_55us.U)){
-        alfa            := (mul_b.asUInt >> 16.U)
-        T               := T + 1.U
-    }.elsewhen((cal_valid_shift(8) === 1.U)&((Timer - last_time)>=DCQCN.T_55us.U)&(T>5.U)){
-        rt              := rt + DCQCN.Rai.U
+        prev_rtt        := cc_reg.user_define(127,96).asTypeOf(SInt())
+        rtt_diff        := cc_reg.user_define(159,128).asTypeOf(SInt())  
+    }.elsewhen(cal_valid_shift(9) === 1.U){
+        rtt_diff        := (mul_a + mul_b) >> 16.U
+    }.elsewhen(cal_valid_shift(2) === 1.U){
+        prev_rtt        := new_rtt
     }
     //cycle 1
+    when(cal_valid_shift(0) === 1.U){
+        new_rtt         := (Timer - ts).asTypeOf(SInt())
+    }
+    //cycle 2
+    when(cal_valid_shift(1) === 1.U){
+        new_rtt_diff    := new_rtt - prev_rtt
+    }
     //cycle 4
-    tmp_b               := 65536.S - (alfa.asSInt>>1.U)
+    tmp_b               := 65536.S - alfa
     //cycle 5
     mul0.io.CLK         := clock
-    mul0.io.A           := rate.asTypeOf(SInt())
+    mul0.io.A           := rtt_diff
     mul0.io.B           := tmp_b
     mul_a               := mul0.io.P
     //cycle 6
     mul1.io.CLK         := clock
-    mul1.io.A           := alfa.asSInt
-    mul1.io.B           := DCQCN.one_g.S
+    mul1.io.A           := new_rtt_diff
+    mul1.io.B           := alfa
     mul_b               := mul1.io.P
-    when((cal_valid_shift(7) === 1.U)&(ecn=== "hffffffff".U)){
-        rc0             := mul_a.asUInt >> 16.U
-        
+    //cycle 9
+    div0.io.aclk                        := clock
+	div0.io.s_axis_divisor_tvalid       := cal_valid_shift(10)
+	div0.io.s_axis_divisor_tdata        := TIMELY.minRTT.S
+	div0.io.s_axis_dividend_tvalid      := cal_valid_shift(10)
+	div0.io.s_axis_dividend_tdata       := rtt_diff<< 16.U
+    when(div0.io.m_axis_dout_tvalid === 1.U){
+        gradient        := div0.io.m_axis_dout_tdata(63,32).asTypeOf(SInt())
     }
-    
-    when(cal_valid_shift(9) === 1.U){
-        rc1            := (rate + rt) >> 1.U
-    }   
+    //cycle 10
+    when(cal_valid_shift(1) === 1.U){
+        rc0             := rate.asTypeOf(UInt()) + TIMELY.Rai.U
+    }
+    //cycle 10
+    div1.io.aclk                        := clock
+	div1.io.s_axis_divisor_tvalid       := cal_valid_shift(1)
+	div1.io.s_axis_divisor_tdata        := new_rtt
+	div1.io.s_axis_dividend_tvalid      := cal_valid_shift(1)
+	div1.io.s_axis_dividend_tdata       := TIMELY.Thigh.S<<16.U
+    when(div1.io.m_axis_dout_tvalid === 1.U){
+        tmp0        := div1.io.m_axis_dout_tdata(63,32).asTypeOf(SInt())
+    }    
+    //cycle 11
+    tmp1            := 65536.S - tmp0
+    //12
+    mul2.io.CLK         := clock
+    mul2.io.A           := belta
+    mul2.io.B           := tmp1
+    tmp2                := mul2.io.P    
+    //14
+    tmp4            := 65536.S - (tmp2 >> 16.U)
+    //15
+    mul3.io.CLK         := clock
+    mul3.io.A           := rate
+    mul3.io.B           := tmp4
+    rc1                := (mul3.io.P >> 16.U).asTypeOf(UInt())
+    //10
+    rc2             := rate.asTypeOf(UInt()) + (TIMELY.Rai.U*5.U)
+    //10
+    mul4.io.CLK         := clock
+    mul4.io.A           := belta
+    mul4.io.B           := gradient
+    tmp5                := mul4.io.P 
+    //11  
+    tmp6            := tmp5 >> 16.U
+    //12
+    tmp7            := 65536.S - tmp6
+    //13
+    mul5.io.CLK         := clock
+    mul5.io.A           := rate
+    mul5.io.B           := tmp7
+    rc3                 := (mul5.io.P.asTypeOf(UInt()))     
     //16
-    when(cal_valid_shift(10) === 1.U){
-        when(ecn=== "hffffffff".U){
+    when(cal_valid_shift(38) === 1.U){
+        when(new_rtt < TIMELY.Tlow.S){
             rc          := rc0
-        }.elsewhen(((Timer - last_time)>=DCQCN.T_55us.U)&(T>5.U)){
+        }.elsewhen(new_rtt > TIMELY.Thigh.S){
             rc          := rc1
-            last_time   := Timer
+        }.elsewhen(gradient <= 0.S){
+            rc          := rc2
         }.otherwise{
-            rc          := rate
+            rc          := rc3 >> 16.U
         }        
     }
 
     //
     div2.io.aclk                        := clock
-	div2.io.s_axis_divisor_tvalid       := cal_valid_shift(11)
+	div2.io.s_axis_divisor_tvalid       := cal_valid_shift(39)
 	div2.io.s_axis_divisor_tdata        := rc.asTypeOf(SInt())
-	div2.io.s_axis_dividend_tvalid      := cal_valid_shift(11)
-	div2.io.s_axis_dividend_tdata       := DCQCN.DIVEDE_RATE_U.S
+	div2.io.s_axis_dividend_tvalid      := cal_valid_shift(39)
+	div2.io.s_axis_dividend_tdata       := TIMELY.DIVEDE_RATE_U.S
     when(div2.io.m_axis_dout_tvalid === 1.U){
         divede_rate        := div2.io.m_axis_dout_tdata(63,32).asTypeOf(UInt())
     }  
@@ -215,29 +257,11 @@ class Dcqcn() extends Module{
                     io.cc_req.bits.lock             := false.B
                     io.cc_req.bits.qpn              := meta_reg.qpn     
                     state                           := sCC_STATE                
-                }.elsewhen(PKG_JUDGE.HAVE_DATA(meta_reg.op_code)){
-                    state                           := sDATAPKT
                 }.otherwise{
                     state                           := sWR_CORE
                 }
             }                 
-        } 
-        is(sDATAPKT){
-            when(io.cc_meta_out.ready){
-                state                           := sIDLE  
-                io.cc_meta_out.valid            := 1.U  
-                io.cc_meta_out.bits             := meta_reg
-                io.cc_meta_out.bits.op_code     := IB_OPCODE.RC_ACK
-                io.cc_meta_out.bits.msg_length  := 0.U
-                io.cc_meta_out.bits.pkg_length  := 0.U
-                when(((Timer - ecn_time)>=DCQCN.T_50us.U)){
-                    io.cc_meta_out.bits.user_define	:= "hffffffff".U
-                    ecn_time                        := Timer
-                }.otherwise{
-                    io.cc_meta_out.bits.user_define	:= 0.U
-                }                
-            }
-        }                
+        }         
         is(sWR_CORE){
             state                           := sWAIT  
             cal_valid                       := 1.U            
@@ -255,7 +279,7 @@ class Dcqcn() extends Module{
                 io.cc_req.bits.lock             := false.B
                 io.cc_req.bits.qpn              := meta_reg.qpn
                 io.cc_req.bits.cc_state.credit  := 0.U
-                io.cc_req.bits.cc_state.user_define := Cat(alfa,rt,last_time,T,BC,byte_count,divede_rate,cc_timer,rc)          
+                io.cc_req.bits.cc_state.user_define := Cat(rtt_diff,prev_rtt,divede_rate,cc_timer,rc)          
                 state                           := sIDLE
             }
         }

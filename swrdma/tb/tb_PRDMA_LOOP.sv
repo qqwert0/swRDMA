@@ -41,14 +41,16 @@ reg                 reset                         =0;
 wire                io_s_tx_meta_0_ready          ;
 reg                 io_s_tx_meta_0_valid          =0;
 reg       [1:0]     io_s_tx_meta_0_bits_rdma_cmd  =0;
-reg       [23:0]    io_s_tx_meta_0_bits_qpn       =0;
+reg       [31:0]    io_s_tx_meta_0_bits_qpn_num   =0;
+reg       [31:0]    io_s_tx_meta_0_bits_msg_num_per_qpn=0;
 reg       [47:0]    io_s_tx_meta_0_bits_local_vaddr=0;
 reg       [47:0]    io_s_tx_meta_0_bits_remote_vaddr=0;
 reg       [31:0]    io_s_tx_meta_0_bits_length    =0;
 wire                io_s_tx_meta_1_ready          ;
 reg                 io_s_tx_meta_1_valid          =0;
 reg       [1:0]     io_s_tx_meta_1_bits_rdma_cmd  =0;
-reg       [23:0]    io_s_tx_meta_1_bits_qpn       =0;
+reg       [31:0]    io_s_tx_meta_1_bits_qpn_num   =0;
+reg       [31:0]    io_s_tx_meta_1_bits_msg_num_per_qpn=0;
 reg       [47:0]    io_s_tx_meta_1_bits_local_vaddr=0;
 reg       [47:0]    io_s_tx_meta_1_bits_remote_vaddr=0;
 reg       [31:0]    io_s_tx_meta_1_bits_length    =0;
@@ -132,6 +134,12 @@ reg       [31:0]    io_arp_req_0_bits             =0;
 wire                io_arp_req_1_ready            ;
 reg                 io_arp_req_1_valid            =0;
 reg       [31:0]    io_arp_req_1_bits             =0;
+wire                io_arpinsert_0_ready          ;
+reg                 io_arpinsert_0_valid          =0;
+reg       [80:0]    io_arpinsert_0_bits           =0;
+wire                io_arpinsert_1_ready          ;
+reg                 io_arpinsert_1_valid          =0;
+reg       [80:0]    io_arpinsert_1_bits           =0;
 reg                 io_arp_rsp_0_ready            =0;
 wire                io_arp_rsp_0_valid            ;
 wire      [47:0]    io_arp_rsp_0_bits_mac_addr    ;
@@ -298,6 +306,8 @@ wire       [5:0]     io_axi1_1_b_bits_id           ;
 wire       [1:0]     io_axi1_1_b_bits_resp         ;
 reg                 io_cpu_started_0              =0;
 reg                 io_cpu_started_1              =0;
+reg       [31:0]    io_pkg_num_0                  =0;
+reg       [31:0]    io_pkg_num_1                  =0;
 wire      [31:0]    io_status_0                   ;
 wire      [31:0]    io_status_1                   ;
 wire      [31:0]    io_status_2                   ;
@@ -811,25 +821,25 @@ wire      [31:0]    io_status_509                 ;
 wire      [31:0]    io_status_510                 ;
 wire      [31:0]    io_status_511                 ;
 
-IN#(154)in_io_s_tx_meta_0(
+IN#(194)in_io_s_tx_meta_0(
         clock,
         reset,
-        {io_s_tx_meta_0_bits_rdma_cmd,io_s_tx_meta_0_bits_qpn,io_s_tx_meta_0_bits_local_vaddr,io_s_tx_meta_0_bits_remote_vaddr,io_s_tx_meta_0_bits_length},
+        {io_s_tx_meta_0_bits_rdma_cmd,io_s_tx_meta_0_bits_qpn_num,io_s_tx_meta_0_bits_msg_num_per_qpn,io_s_tx_meta_0_bits_local_vaddr,io_s_tx_meta_0_bits_remote_vaddr,io_s_tx_meta_0_bits_length},
         io_s_tx_meta_0_valid,
         io_s_tx_meta_0_ready
 );
-// rdma_cmd, qpn, local_vaddr, remote_vaddr, length
-// 2'h0, 24'h0, 48'h0, 48'h0, 32'h0
+// rdma_cmd, qpn_num, msg_num_per_qpn, local_vaddr, remote_vaddr, length
+// 2'h0, 32'h0, 32'h0, 48'h0, 48'h0, 32'h0
 
-IN#(154)in_io_s_tx_meta_1(
+IN#(194)in_io_s_tx_meta_1(
         clock,
         reset,
-        {io_s_tx_meta_1_bits_rdma_cmd,io_s_tx_meta_1_bits_qpn,io_s_tx_meta_1_bits_local_vaddr,io_s_tx_meta_1_bits_remote_vaddr,io_s_tx_meta_1_bits_length},
+        {io_s_tx_meta_1_bits_rdma_cmd,io_s_tx_meta_1_bits_qpn_num,io_s_tx_meta_1_bits_msg_num_per_qpn,io_s_tx_meta_1_bits_local_vaddr,io_s_tx_meta_1_bits_remote_vaddr,io_s_tx_meta_1_bits_length},
         io_s_tx_meta_1_valid,
         io_s_tx_meta_1_ready
 );
-// rdma_cmd, qpn, local_vaddr, remote_vaddr, length
-// 2'h0, 24'h0, 48'h0, 48'h0, 32'h0
+// rdma_cmd, qpn_num, msg_num_per_qpn, local_vaddr, remote_vaddr, length
+// 2'h0, 32'h0, 32'h0, 48'h0, 48'h0, 32'h0
 
 DMA #(512) qdma0(
     clock,
@@ -962,6 +972,26 @@ OUT#(49)out_io_arp_rsp_1(
 );
 // mac_addr, hit
 // 48'h0, 1'h0
+
+IN#(81)in_io_arpinsert_0(
+        clock,
+        reset,
+        {io_arpinsert_0_bits},
+        io_arpinsert_0_valid,
+        io_arpinsert_0_ready
+);
+// 
+// 81'h0
+
+IN#(81)in_io_arpinsert_1(
+        clock,
+        reset,
+        {io_arpinsert_1_bits},
+        io_arpinsert_1_valid,
+        io_arpinsert_1_ready
+);
+// 
+// 81'h0
 
 blk_mem_gen_0 inst_0_0 (
   .rsta_busy(),          // output wire rsta_busy
@@ -1167,6 +1197,8 @@ initial begin
         io_local_ip_address_1         =32'h02bda8c0;   
         io_cpu_started_0              = 1'b1; 
         io_cpu_started_1              = 1'b1; 
+        io_pkg_num_0                  = 32'h1000;
+        io_pkg_num_1                  = 32'h1000;
         $readmemh("config_big_rd_wr.hex", rdma_config);
         #10000;
         reset <= 0;
@@ -1177,8 +1209,10 @@ initial begin
         out_io_arp_rsp_0.start();
         out_io_arp_rsp_1.start();
         #100
-        in_io_arp_req_0.write(32'h02bda8c0);
-        in_io_arp_req_1.write(32'h01bda8c0);
+        in_io_arpinsert_0.write(81'h1029d02350a0002bda8c0);
+        in_io_arpinsert_1.write(81'h1019d02350a0001bda8c0);        
+        // in_io_arp_req_0.write(32'h02bda8c0);
+        // in_io_arp_req_1.write(32'h01bda8c0);
         #25000
         qpn_nums        = rdma_config[0][15:0];
         rdma_cmd_nums   = rdma_config[0][31:16];
@@ -1199,36 +1233,45 @@ initial begin
         in_io_qp_init_1.write({24'h1,24'h1,32'h01bda8c0,16'h17,24'h1000,24'h4000,24'h4000});
         in_io_qp_init_0.write({24'h2,24'h2,32'h02bda8c0,16'h17,24'h10000,24'h40000,24'h40000});     // qpn, op_code, credit, psn// 24'h0, 8'h0, 16'h0, 24'h0
         in_io_qp_init_1.write({24'h2,24'h2,32'h01bda8c0,16'h17,24'h40000,24'h10000,24'h10000});
-        in_io_cc_init_0.write({24'h1,32'h0000,32'h2cec,32'h0,32'h164,352'h164_00000000_00002cec,1'h0}); //qpn,cc_state_credit,cc_state_rate,cc_state_timer,cc_state_user_define
-        in_io_cc_init_0.write({24'h2,32'h0000,32'h2cec,32'h0,32'h164,352'h164_00000000_00002cec,1'h0});
-        in_io_cc_init_1.write({24'h1,32'h0000,32'h2cec,32'h0,32'h164,352'h164_00000000_00002cec,1'h0}); //qpn,cc_state_credit,cc_state_rate,cc_state_timer,cc_state_user_define
-        in_io_cc_init_1.write({24'h2,32'h0000,32'h2cec,32'h0,32'h164,352'h164_00000000_00002cec,1'h0});   //qpn, cc_state_credit, cc_state_rate, cc_state_timer, cc_state_divide_rate, cc_state_user_define, cc_state_lock     
-    // qpn, local_psn, remote_psn, remote_qpn, remote_ip, remote_udp_port, credit
+        // in_io_cc_init_0.write({24'h1,32'h0000,32'h2cec,32'h0,32'h164,352'h00010000_00002eec_00000000_00000000_00000000_00000000_00000164_00000000_00002cec,1'h0}); //qpn,cc_state_credit,cc_state_rate,cc_state_timer,cc_state_user_define
+        // in_io_cc_init_0.write({24'h2,32'h0000,32'h2cec,32'h0,32'h164,352'h00010000_00002eec_00000000_00000000_00000000_00000000_00000164_00000000_00002cec,1'h0});
+        // in_io_cc_init_1.write({24'h1,32'h0000,32'h2cec,32'h0,32'h164,352'h00010000_00002eec_00000000_00000000_00000000_00000000_00000164_00000000_00002cec,1'h0}); //qpn,cc_state_credit,cc_state_rate,cc_state_timer,cc_state_user_define
+        // in_io_cc_init_1.write({24'h2,32'h0000,32'h2cec,32'h0,32'h164,352'h00010000_00002eec_00000000_00000000_00000000_00000000_00000164_00000000_00002cec,1'h0});   //qpn, cc_state_credit, cc_state_rate, cc_state_timer, cc_state_divide_rate, cc_state_user_define, cc_state_lock     
+        in_io_cc_init_0.write({24'h1,32'h0000,32'h2cec,32'h0,32'h164,352'h00010000_00002eec_00000000_00000000_00000000_00000000_00000000_00000164_00000000_00002cec,1'h0}); //qpn,cc_state_credit,cc_state_rate,cc_state_timer,cc_state_user_define
+        in_io_cc_init_0.write({24'h2,32'h0000,32'h2cec,32'h0,32'h164,352'h00010000_00002eec_00000000_00000000_00000000_00000000_00000000_00000164_00000000_00002cec,1'h0});
+        in_io_cc_init_1.write({24'h1,32'h0000,32'h2cec,32'h0,32'h164,352'h00010000_00002eec_00000000_00000000_00000000_00000000_00000000_00000164_00000000_00002cec,1'h0}); //qpn,cc_state_credit,cc_state_rate,cc_state_timer,cc_state_user_define
+        in_io_cc_init_1.write({24'h2,32'h0000,32'h2cec,32'h0,32'h164,352'h00010000_00002eec_00000000_00000000_00000000_00000000_00000000_00000164_00000000_00002cec,1'h0});   //qpn, cc_state_credit, cc_state_rate, cc_state_timer, cc_state_divide_rate, cc_state_user_define, cc_state_lock   
+        // qpn, local_psn, remote_psn, remote_qpn, remote_ip, remote_udp_port, credit
     // 16'h0, 24'h0, 24'h0, 24'h0, 32'h0, 16'h0, 24'h0
     
         #2000
-        for(i=0;i<rdma_cmd_nums;i=i+1)begin
-            if(rdma_config[i+mem_block_nums+1][1:0])begin
-                for(j=0;j<1024;j++)begin
-                    in_io_s_tx_meta_1.write({rdma_config[i+mem_block_nums+1][3:2],rdma_config[i+mem_block_nums+1][27:4],rdma_config[i+mem_block_nums+1][75:28],rdma_config[i+mem_block_nums+1][123:76],rdma_config[i+mem_block_nums+1][155:124]});// rdma_cmd, qpn, local_vaddr, remote_vaddr, length
-                    // if(rdma_config[i+mem_block_nums+1][3:2]==2)begin
-                    //     io_m_mem_read_cmd_3_valid       = 1;
-                    //     io_m_mem_read_cmd_3_bits_vaddr  = 0;
-                    //     io_m_mem_read_cmd_3_bits_length = (2048+64)*1024;                
-                    // end
-                end
-            end
-            else begin
-                for(j=0;j<1024;j++)begin
-                    // in_io_s_tx_meta_0.write({rdma_config[i+mem_block_nums+1][3:2],rdma_config[i+mem_block_nums+1][27:4],rdma_config[i+mem_block_nums+1][75:28],rdma_config[i+mem_block_nums+1][123:76],rdma_config[i+mem_block_nums+1][155:124]});
-                    // if(rdma_config[i+mem_block_nums+1][3:2]==2)begin
-                    //     io_m_mem_read_cmd_2_valid       = 1;
-                    //     io_m_mem_read_cmd_2_bits_vaddr  = 0;
-                    //     io_m_mem_read_cmd_2_bits_length = (4096+64)*1024;                
-                    // end            
-                end
-            end
-        end
+
+        in_io_s_tx_meta_1.write({2'b1,32'h1,32'h1000,48'h200,48'h0,32'h800});
+// rdma_cmd, qpn_num, msg_num_per_qpn, local_vaddr, remote_vaddr, length
+// 2'h0, 32'h0, 32'h0, 48'h0, 48'h0, 32'h0
+
+        // for(i=0;i<rdma_cmd_nums;i=i+1)begin
+        //     if(rdma_config[i+mem_block_nums+1][1:0])begin
+        //         for(j=0;j<1024;j++)begin
+        //             in_io_s_tx_meta_1.write({rdma_config[i+mem_block_nums+1][3:2],rdma_config[i+mem_block_nums+1][27:4],rdma_config[i+mem_block_nums+1][75:28],rdma_config[i+mem_block_nums+1][123:76],rdma_config[i+mem_block_nums+1][155:124]});// rdma_cmd, qpn, local_vaddr, remote_vaddr, length
+        //             // if(rdma_config[i+mem_block_nums+1][3:2]==2)begin
+        //             //     io_m_mem_read_cmd_3_valid       = 1;
+        //             //     io_m_mem_read_cmd_3_bits_vaddr  = 0;
+        //             //     io_m_mem_read_cmd_3_bits_length = (2048+64)*1024;                
+        //             // end
+        //         end
+        //     end
+        //     else begin
+        //         for(j=0;j<1024;j++)begin
+        //             // in_io_s_tx_meta_0.write({rdma_config[i+mem_block_nums+1][3:2],rdma_config[i+mem_block_nums+1][27:4],rdma_config[i+mem_block_nums+1][75:28],rdma_config[i+mem_block_nums+1][123:76],rdma_config[i+mem_block_nums+1][155:124]});
+        //             // if(rdma_config[i+mem_block_nums+1][3:2]==2)begin
+        //             //     io_m_mem_read_cmd_2_valid       = 1;
+        //             //     io_m_mem_read_cmd_2_bits_vaddr  = 0;
+        //             //     io_m_mem_read_cmd_2_bits_length = (4096+64)*1024;                
+        //             // end            
+        //         end
+        //     end
+        // end
     
         // #10
         // io_m_mem_read_cmd_2_valid       = 0;

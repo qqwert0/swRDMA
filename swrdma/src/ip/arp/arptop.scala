@@ -13,6 +13,7 @@ class arp  extends Module{
         val net_tx          =   Decoupled(new AXIS(512))
         val arp_req1        =   Flipped(Decoupled(UInt(32.W)))
         val arp_req2        =   Flipped(Decoupled(UInt(32.W)))
+        val arpinsert       =   Flipped(Decoupled(UInt(81.W)))
         val arp_rsp1        =   Decoupled(new mac_out)
         val arp_rsp2        =   Decoupled(new mac_out)
         val mac_address     =   Input(UInt(48.W))
@@ -33,6 +34,7 @@ class arp  extends Module{
     generate_arp_pkg.io.data_out    <> io.net_tx
 
     arp_table.io.arpinsert          <> process_arp_pkg.io.arpinsert
+    arp_table.io.arpinsert1         <> io.arpinsert
     arp_table.io.arp_req1           <> io.arp_req1
     arp_table.io.arp_req2           <> io.arp_req2
     arp_table.io.mymac              := io.mac_address

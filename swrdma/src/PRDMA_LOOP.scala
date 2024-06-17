@@ -14,7 +14,7 @@ import common.ToZero
 class PRDMA_LOOP() extends Module{
 	val io = IO(new Bundle{
 
-        val s_tx_meta  		    = Vec(2,Flipped(Decoupled(new App_meta())))
+        val s_tx_meta  		    = Vec(2,Flipped(Decoupled(new Total_meta())))
 
         // val s_send_data         = Vec(2,Flipped(Decoupled(new AXIS(512))))
         // val m_recv_data         = Vec(2,(Decoupled(new AXIS(512))))
@@ -33,17 +33,24 @@ class PRDMA_LOOP() extends Module{
         val local_ip_address    = Vec(2,Input(UInt(32.W)))
 
         val arp_req             =   Vec(2,Flipped(Decoupled(UInt(32.W))))
+        val arpinsert           =   Vec(2,Flipped(Decoupled(UInt(81.W))))
         val arp_rsp             =   Vec(2,Decoupled(new mac_out))
 
         val axi0                = Vec(2,(new AXI(33, 256, 6, 0, 4)))
         val axi1                = Vec(2,(new AXI(33, 256, 6, 0, 4)))        
 
         val cpu_started         = Vec(2,Input(Bool()))   
+        val pkg_num             = Vec(2,Input(UInt(32.W)))   
         val status              = Output(Vec(512,UInt(32.W)))
 	})
 
 
     val roce = Seq.fill(2)(Module(new PRDMA()))
+
+    val msg_send = Seq.fill(2)(Module(new MsgSend()))
+
+    val write_host = Seq.fill(2)(Module(new WriteHost()))
+    val read_host = Seq.fill(2)(Module(new ReadHost()))
 
     val q = XQueue(2)(new AXIS(512), 16)
 
@@ -57,17 +64,37 @@ class PRDMA_LOOP() extends Module{
         ip(i).io.m_tcp_rx.ready         := 1.U
         ip(i).io.m_udp_rx.ready         := 1.U   
         ip(i).io.arp_req                <> io.arp_req(i) 
+        ip(i).io.arpinsert              <> io.arpinsert(i)
         ip(i).io.arp_rsp                <> io.arp_rsp(i) 
 
-        io.s_tx_meta(i)                 <> roce(i).io.s_tx_meta  	        
+        roce(i).io.s_tx_meta			<> msg_send(i).io.app_meta_out
+        io.s_tx_meta(i)                 <> msg_send(i).io.app_meta_in  	        
         io.qp_init(i)                   <> roce(i).io.qp_init
         io.cc_init(i)                   <> roce(i).io.cc_init
         io.local_ip_address(i)          <> roce(i).io.local_ip_address
-        io.m_mem_read_cmd(i)            <> roce(i).io.m_mem_read_cmd 
-        io.s_mem_read_data(i)           <> roce(i).io.s_mem_read_data 
-        io.m_mem_write_cmd(i)           <> roce(i).io.m_mem_write_cmd 
-        io.m_mem_write_data(i)          <> roce(i).io.m_mem_write_data   
+        io.s_mem_read_data(i)           <> read_host(i).io.memData 
+
+        read_host(i).io.m_mem_read_cmd            <> roce(i).io.m_mem_read_cmd 
+        read_host(i).io.s_mem_read_data           <> roce(i).io.s_mem_read_data
+
+	    read_host(i).io.cpuReq.valid		<> io.m_mem_read_cmd(i).valid
+	    read_host(i).io.cpuReq.ready		<> io.m_mem_read_cmd(i).ready
+	    read_host(i).io.cpuReq.bits.addr	<> io.m_mem_read_cmd(i).bits.vaddr
+	    read_host(i).io.cpuReq.bits.size	<> io.m_mem_read_cmd(i).bits.length
+
+        
+
+        write_host(i).io.m_mem_write_cmd    <> roce(i).io.m_mem_write_cmd
+        write_host(i).io.m_mem_write_data   <> roce(i).io.m_mem_write_data
+        write_host(i).io.address            <> 10000.U
+        write_host(i).io.pkg_num            <> io.pkg_num(i)
+	    write_host(i).io.cpuReq.valid		<> io.m_mem_write_cmd(i).valid
+	    write_host(i).io.cpuReq.ready		<> io.m_mem_write_cmd(i).ready
+	    write_host(i).io.cpuReq.bits.addr	<> io.m_mem_write_cmd(i).bits.vaddr
+	    write_host(i).io.cpuReq.bits.size	<> io.m_mem_write_cmd(i).bits.length
+        io.m_mem_write_data(i)          <> write_host(i).io.memData
         roce(i).io.cpu_started          := io.cpu_started(i)
+        roce(i).io.tx_delay             := 10.U
 
 
         // roce(i).io.axi(0).ar.ready      := 1.U
