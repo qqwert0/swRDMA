@@ -79,7 +79,7 @@ class PRDMA() extends Module{
     val rx_dispatch = Module(new RxDispatch())
     val pkg_drop = Module(new PkgDrop())
     val data_writer = Module(new DataWriter())
-    val rx_cc = Module(new Timely())
+    val rx_cc = Module(new Dcqcn())
 
     val handle_tx = Module(new HandleTx())
     val schedule = Module(new Schedule())

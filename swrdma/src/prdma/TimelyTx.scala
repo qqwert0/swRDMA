@@ -137,7 +137,7 @@ class TimelyTx() extends Module{
                 // io.cc_meta_out.bits.qpn         := tx_core.io.user_csr_rd(1.U+pkg_meta_addr_base)
                 io.cc_meta_out.bits.op_code     := meta_reg.op_code
                 io.cc_meta_out.bits.header_len  := (CONFIG.SWRDMA_HEADER_LEN/8).U
-                io.cc_meta_out.bits.user_define := Cat("h0".U,Timer) 
+                io.cc_meta_out.bits.user_define := "h0".U//Cat("h0".U,Timer) 
                 io.cc_req.valid                 := 1.U
                 io.cc_req.bits.is_wr            := true.B
                 io.cc_req.bits.lock             := false.B
