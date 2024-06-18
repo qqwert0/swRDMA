@@ -1,21 +1,21 @@
 [submodule "common"]
-	path = common
+	path = hw/common
 	url = git@github.com:carlzhang4/common.git
 [submodule "qdma"]
-	path = qdma
+	path = hw/qdma
 	url = git@github.com:RC4ML/qdma.git
 [submodule "hbm"]
-	path = hbm
+	path = hw/hbm
 	url = git@github.com:RC4ML/chisel_hbm.git
 [submodule "cmac"]
-	path = cmac
+	path = hw/cmac
 	url = git@github.com:carlzhang4/cmac.git
 [submodule "ddr"]
-	path = ddr
+	path = hw/ddr
 	url = git@github.com:rc4ml/ddr.git
 [submodule "network"]
-	path = network
+	path = hw/network
 	url = git@github.com:qqwert0/network.git
 [submodule "core"]
-	path = core
+	path = hw/core
 	url = https://github.com/HobbitQia/core/

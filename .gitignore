@@ -1,7 +1,7 @@
-/Verilog
-/out
-/.bloop
-/.metals
+/hw/Verilog
+/hw/out
+/hw/.bloop
+/hw/.metals
 /.vscode
-/gen
-config.json
+/hw/gen
+/hw/config.json

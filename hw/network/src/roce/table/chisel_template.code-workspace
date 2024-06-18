@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../../.."
+		},
+		{
+			"path": "../../../../rdma_new2021/rdma2021"
+		}
+	],
+	"settings": {
+		"files.watcherExclude": {
+			"**/target": true
+		},
+		"hide-files.files": []
+	}
+}
