@@ -50,8 +50,8 @@ class CCTable() extends Module{
     cc_table.io.wr_en_a                := 0.U
     cc_table.io.data_in_a              := 0.U.asTypeOf(cc_table.io.data_in_a)
 
-    cc_tx_fifo.io.out.ready               := (state === sIDLE) & (!io.cc_init.valid.asBool)
-    cc_rx_fifo.io.out.ready               := (state === sIDLE) & (!io.cc_init.valid.asBool) & (!cc_tx_fifo.io.out.fire)
+    cc_tx_fifo.io.out.ready               := (state === sIDLE) & (!io.cc_init.valid.asBool) & (!cc_rx_fifo.io.out.fire)
+    cc_rx_fifo.io.out.ready               := (state === sIDLE) & (!io.cc_init.valid.asBool)
     io.cc_init.ready                      := 1.U
 
 
@@ -68,14 +68,14 @@ class CCTable() extends Module{
                 cc_table.io.wr_en_a                   := 1.U
                 cc_table.io.data_in_a                 := io.cc_init.bits.cc_state
                 state                                   := sIDLE        
-            }.elsewhen(cc_tx_fifo.io.out.fire){
-                cc_request                            := cc_tx_fifo.io.out.bits
-                cc_table.io.addr_b             := cc_tx_fifo.io.out.bits.qpn
-                state                            := sTXRSP
             }.elsewhen(cc_rx_fifo.io.out.fire){
                 cc_request                            := cc_rx_fifo.io.out.bits   
                 cc_table.io.addr_b             := cc_rx_fifo.io.out.bits.qpn
                 state                            := sRXRSP                           
+            }.elsewhen(cc_tx_fifo.io.out.fire){
+                cc_request                            := cc_tx_fifo.io.out.bits
+                cc_table.io.addr_b             := cc_tx_fifo.io.out.bits.qpn
+                state                            := sTXRSP
             }.otherwise{
                 state                           := sIDLE
             } 

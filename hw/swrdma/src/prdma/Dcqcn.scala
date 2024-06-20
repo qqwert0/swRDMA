@@ -79,6 +79,7 @@ class Dcqcn() extends Module{
     val last_time = RegInit(0.U(64.W))
     val rt = RegInit(0.U(32.W))
     val ecn_time = RegInit(0.U(64.W))
+    val update_alfa = RegInit(false.B)
 
     val alfa    = RegInit(0.U(32.W))
     val tmp_b = RegInit(0.S(32.W))
@@ -138,12 +139,23 @@ class Dcqcn() extends Module{
         rt              := cc_reg.user_define(287,256)
         alfa            := cc_reg.user_define(319,288)
     }.elsewhen((cal_valid_shift(7) === 1.U)&(ecn=== "hffffffff".U)){
+        rt              := rate
+        update_alfa     := true.B
         alfa            := (mul_b.asUInt >> 16.U) + DCQCN.g.U
     }.elsewhen((cal_valid_shift(7) === 1.U)&((Timer - last_time)>=DCQCN.T_55us.U)){
-        alfa            := (mul_b.asUInt >> 16.U)
+        when(update_alfa){
+            alfa            := (mul_b.asUInt >> 16.U)
+        }.otherwise{
+            update_alfa     := false.B
+            alfa            := alfa
+        }
         T               := T + 1.U
     }.elsewhen((cal_valid_shift(8) === 1.U)&((Timer - last_time)>=DCQCN.T_55us.U)&(T>5.U)){
-        rt              := rt + DCQCN.Rai.U
+        when(rt > 11500.U){
+            rt              := rt
+        }.otherwise{
+            rt              := rt + DCQCN.Rai.U
+        }
     }
     //cycle 1
     //cycle 4
@@ -231,7 +243,7 @@ class Dcqcn() extends Module{
                 io.cc_meta_out.bits.msg_length  := 0.U
                 io.cc_meta_out.bits.pkg_length  := 0.U
                 when(((Timer - ecn_time)>=DCQCN.T_50us.U)){
-                    io.cc_meta_out.bits.user_define	:= "hffffffff".U
+                    io.cc_meta_out.bits.user_define	:= meta_reg.user_define
                     ecn_time                        := Timer
                 }.otherwise{
                     io.cc_meta_out.bits.user_define	:= 0.U
@@ -261,14 +273,16 @@ class Dcqcn() extends Module{
         }
     }
 
-       /* class ila_timely(seq:Seq[Data]) extends BaseILA(seq)
-        val inst_ila_timely = Module(new ila_timely(Seq(
-            state,
-            new_rtt,
-            rc_reg
-        )))
+        // class ila_timely(seq:Seq[Data]) extends BaseILA(seq)
+        // val inst_ila_timely = Module(new ila_timely(Seq(
+        //     state,
+        //     ecn,
+        //     rc_reg,
+        //     rate,
+        //     rt,
+        // )))
 
-        inst_ila_timely.connect(clock)
-*/
+        // inst_ila_timely.connect(clock)
+
 }
 

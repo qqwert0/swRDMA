@@ -1246,7 +1246,7 @@ initial begin
     
         #2000
 
-        in_io_s_tx_meta_1.write({2'b1,32'h1,32'h1000,48'h200,48'h0,32'h800});
+        in_io_s_tx_meta_1.write({2'b1,32'h1,32'h10000,48'h200,48'h0,32'h800});
 // rdma_cmd, qpn_num, msg_num_per_qpn, local_vaddr, remote_vaddr, length
 // 2'h0, 32'h0, 32'h0, 48'h0, 48'h0, 32'h0
 

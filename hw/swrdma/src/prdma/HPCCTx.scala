@@ -13,7 +13,7 @@ import mini.junctions._
 
 
 
-class TimelyTx() extends Module{
+class HPCCTx() extends Module{
 	val io = IO(new Bundle{
         val cc_meta_in      = Flipped(Decoupled(new Event_meta()))
         val cc_state_in     = Flipped(Decoupled(new CC_state()))
@@ -62,8 +62,8 @@ class TimelyTx() extends Module{
     val Timer = RegInit(0.U(64.W))
     val cpu_started = RegNext(io.cpu_started)
     val cc_timer = RegInit(0.U(32.W))
-    val time_diff = RegInit(0.U(32.W))
-    val divide_rate = RegInit(0.U(32.W))
+    val window = RegInit(0.U(32.W))
+    val credit = RegInit(0.U(32.W))
     val delay = RegInit(0.U(32.W))
     val tx_delay = RegNext(io.tx_delay)
 
@@ -100,7 +100,7 @@ class TimelyTx() extends Module{
                 meta_reg                        := cc_meta_fifo.io.out.bits
                 io.cc_req.valid                 := 1.U
                 io.cc_req.bits.is_wr            := false.B
-                io.cc_req.bits.lock             := false.B
+                io.cc_req.bits.lock             := true.B
                 io.cc_req.bits.qpn              := cc_meta_fifo.io.out.bits.qpn
                 state                           := sCC_STATE
             }                 
@@ -111,7 +111,7 @@ class TimelyTx() extends Module{
                 when(cc_state_fifo.io.out.bits.lock === true.B){
                     io.cc_req.valid                 := 1.U
                     io.cc_req.bits.is_wr            := false.B
-                    io.cc_req.bits.lock             := false.B
+                    io.cc_req.bits.lock             := true.B
                     io.cc_req.bits.qpn              := meta_reg.qpn     
                     state                           := sCC_STATE                
                 }.otherwise{
@@ -120,16 +120,20 @@ class TimelyTx() extends Module{
             }                 
         }            
         is(sWR_CORE){
-            time_diff       := (Timer - cc_reg.user_define(63,32)) << 8.U;
-            cc_timer        := cc_reg.user_define(63,32)
-            divide_rate     := cc_reg.user_define(95,64) << meta_reg.len_log(4,0)
+            window          := cc_reg.user_define(31,0)
+            credit          := cc_reg.credit
             state                           := sWAIT                
         }
         is(sWAIT){
-            when((time_diff > divide_rate)&&(delay >= tx_delay)){   
+            when((window - credit) > meta_reg.pkg_length){   
                 state                           := sDONE
+            }.otherwise{
+                io.cc_req.valid                 := 1.U
+                io.cc_req.bits                  := cc_reg
+                io.cc_req.bits.is_wr            := true.B
+                io.cc_req.bits.lock             := false.B  
+                state                           := sCC_STATE          
             }
-            time_diff       := (Timer - cc_timer) << 8.U;
         }
         is(sDONE){
                 io.cc_meta_out.valid            := 1.U
@@ -142,8 +146,8 @@ class TimelyTx() extends Module{
                 io.cc_req.bits.is_wr            := true.B
                 io.cc_req.bits.lock             := false.B
                 io.cc_req.bits.qpn              := meta_reg.qpn
-                io.cc_req.bits.cc_state.credit  := 0.U
-                io.cc_req.bits.cc_state.user_define := Cat("h0".U,cc_reg.divide_rate,Timer(31,0),cc_reg.rate)          
+                io.cc_req.bits.cc_state.credit  := credit
+                io.cc_req.bits.cc_state.user_define := Cat("h0".U,window)          
                 state                           := sIDLE
         }
     }

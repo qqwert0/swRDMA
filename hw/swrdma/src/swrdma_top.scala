@@ -365,9 +365,9 @@ class swrdma_top extends MultiIOModule {
 	}
 
 	// val txdata = RegInit(0.U(96.W))
-	// txdata	:= RegNext(RegNext(cmacInst2.io.s_net_tx.bits.data(207,112)))
+	// txdata	:= RegNext(RegNext(cmacInst2.io.s_net_tx.bits.data(511,416)))
 	// val rxdata = RegInit(0.U(96.W))
-	// rxdata	:= RegNext(RegNext(cmacInst2.io.m_net_rx.bits.data(207,112)))
+	// rxdata	:= RegNext(RegNext(cmacInst2.io.m_net_rx.bits.data(511,416)))
 	// val rx_valid = RegInit(0.U(1.W))
 	// rx_valid	:= RegNext(RegNext(cmacInst2.io.m_net_rx.valid))
 	// val rx_ready = RegInit(0.U(1.W))
