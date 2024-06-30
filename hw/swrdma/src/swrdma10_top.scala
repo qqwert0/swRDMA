@@ -12,7 +12,7 @@ import qdma._
 import cmac._
 import hbm._
 
-class U280DynamicGreyBox extends MultiIOModule {
+class swrdma10_top extends MultiIOModule {
 	override val desiredName = "AlveoDynamicTop"
     val io = IO(Flipped(new AlveoStaticIO(
         VIVADO_VERSION = "202101", 
@@ -25,7 +25,7 @@ class U280DynamicGreyBox extends MultiIOModule {
 		ENABLE_DDR_2=false
     )))
 
-	val dbgBridgeInst = DebugBridge(IP_CORE_NAME="DebugBridgeBase", clk=clock)
+	val dbgBridgeInst = DebugBridge(IP_CORE_NAME="DebugBridge", clk=clock)
 	dbgBridgeInst.getTCL()
 
 	dontTouch(io)
@@ -86,28 +86,27 @@ class U280DynamicGreyBox extends MultiIOModule {
 
     // not used cmac,but sould get it
 		
-	// val cmacInst = Module(new XCMAC(BOARD="u280", PORT=0, IP_CORE_NAME="CMACBlackBoxBase"))
-	// cmacInst.getTCL()
-	// // Connect CMAC's pins
-	// cmacInst.io.pin			<> io.cmacPin.get
-	// cmacInst.io.drp_clk		:= io.cmacClk.get
-	// cmacInst.io.user_clk	:= userClk
-	// cmacInst.io.user_arstn	:= userRstn
-	// cmacInst.io.sys_reset	:= reset
+
+	// io.cmacPin.get		<> DontCare
+
 	
 
 	
-	// val cmacInst2 = Module(new XCMAC(BOARD="u280", PORT=1, IP_CORE_NAME="CMACBlackBoxBase2"))
-	// cmacInst2.getTCL()
+	val netmodule = Module(new netmodule())
 	// Connect CMAC's pins
-	// cmacInst2.io.pin			<> io.cmacPin2.get
-	// cmacInst2.io.drp_clk		:= io.cmacClk.get
-	// cmacInst2.io.user_clk		:= userClk
-	// cmacInst2.io.user_arstn		:= userRstn
-	// cmacInst2.io.sys_reset		:= reset
 
-	io.cmacPin2.get <> DontCare
-	io.cmacClk.get <> DontCare
+    netmodule.io.dclk          <> io.cmacClk.get
+    netmodule.io.user_clk      := userClk
+    netmodule.io.sys_reset     := reset
+    netmodule.io.aresetn       := userRstn
+    netmodule.io.gt_refclk_p   <> io.cmacPin2.get.gt_clk_p
+    netmodule.io.gt_refclk_n   <> io.cmacPin2.get.gt_clk_n
+    netmodule.io.gt_rxp_in     <> io.cmacPin2.get.rx_p
+    netmodule.io.gt_rxn_in     <> io.cmacPin2.get.rx_n
+    netmodule.io.gt_txp_out    <> io.cmacPin2.get.tx_p
+    netmodule.io.gt_txn_out    <> io.cmacPin2.get.tx_n
+
+
 
 
     // //? DDR port
@@ -140,45 +139,67 @@ class U280DynamicGreyBox extends MultiIOModule {
 	DataReaderInst.io.callback.ready		:= 1.U
 	// CallbackWriterInst.io.callback <> DataWriterInst.io.callback
 
-	val msg_send = Module(new MsgSend())
-	val roce = Module(new PRDMA())
-	val ip = Module(new IPTest())   
-	val tx_fifo = XQueue(AXIS(512),entries=512)
-	val rx_fifo = XQueue(AXIS(512),entries=512)
+	
+	val msg_send = withClockAndReset(userClk, ~userRstn.asBool) {Module(new MsgSend())}
+	val roce = withClockAndReset(userClk, ~userRstn.asBool) {Module(new PRDMA())}
+	val write_host = withClockAndReset(userClk, ~userRstn.asBool){(Module(new WriteHost()))}
+	val read_host = withClockAndReset(userClk, ~userRstn.asBool){(Module(new ReadHost()))}
+	val ip = withClockAndReset(userClk, ~userRstn.asBool) {Module(new IPTest())}
+	val tx_fifo = withClockAndReset(userClk, ~userRstn.asBool) {XQueue(AXIS(512),entries=512)}
+	val rx_fifo = withClockAndReset(userClk, ~userRstn.asBool) {XQueue(AXIS(512),entries=512)}
 
-
+	withClockAndReset(userClk, ~userRstn.asBool) {	
 	ip.io.s_ip_tx				<> tx_fifo.io.out
     roce.io.m_net_tx_data       <> tx_fifo.io.in
-    // ip.io.m_mac_tx              <> cmacInst2.io.s_net_tx
-    // ip.io.s_mac_rx              <> cmacInst2.io.m_net_rx
-    ip.io.m_mac_tx              <> ip.io.s_mac_rx
-	ToZero(ip.io.arpinsert.valid)
-	ToZero(ip.io.arpinsert.bits)
+
     roce.io.s_net_rx_data       <> rx_fifo.io.out
 	ip.io.m_roce_rx				<> rx_fifo.io.in
 	roce.io.s_tx_meta			<> msg_send.io.app_meta_out
+
+
+    netmodule.io.m_axis_net_rx_valid <> ip.io.s_mac_rx.valid
+    netmodule.io.m_axis_net_rx_ready <> ip.io.s_mac_rx.ready
+    netmodule.io.m_axis_net_rx_data  <> ip.io.s_mac_rx.bits.data
+    netmodule.io.m_axis_net_rx_keep  <> ip.io.s_mac_rx.bits.keep
+    netmodule.io.m_axis_net_rx_last  <> ip.io.s_mac_rx.bits.last
+    netmodule.io.s_axis_net_tx_valid <> ip.io.m_mac_tx.valid
+    netmodule.io.s_axis_net_tx_ready <> ip.io.m_mac_tx.ready
+    netmodule.io.s_axis_net_tx_data  <> ip.io.m_mac_tx.bits.data
+    netmodule.io.s_axis_net_tx_keep  <> ip.io.m_mac_tx.bits.keep
+    netmodule.io.s_axis_net_tx_last  <> ip.io.m_mac_tx.bits.last
 
     ip.io.m_tcp_rx.ready         := 1.U
     ip.io.m_udp_rx.ready         := 1.U   
     ip.io.arp_rsp.ready          := 1.U 	        
 
+	write_host.io.m_mem_write_cmd			<> roce.io.m_mem_write_cmd
+	write_host.io.m_mem_write_data			<> roce.io.m_mem_write_data
+	write_host.io.address             		:= RegNext(Cat(control_reg(123),control_reg(124)))
+	write_host.io.pkg_num             		:= RegNext(control_reg(125))
+	write_host.io.cpuReq              		<> DataWriterInst.io.cpuReq
+	write_host.io.memData             		<> DataWriterInst.io.memData
 
-	DataWriterInst.io.cpuReq.valid			<> roce.io.m_mem_write_cmd.valid
-	DataWriterInst.io.cpuReq.ready			<> roce.io.m_mem_write_cmd.ready
-	DataWriterInst.io.cpuReq.bits.addr		<> roce.io.m_mem_write_cmd.bits.vaddr
-	DataWriterInst.io.cpuReq.bits.size		<> roce.io.m_mem_write_cmd.bits.length
-	DataWriterInst.io.cpuReq.bits.callback	:= 0.U
-	DataWriterInst.io.memData				<> roce.io.m_mem_write_data
+	read_host.io.m_mem_read_cmd				<> roce.io.m_mem_read_cmd
+	read_host.io.s_mem_read_data			<> roce.io.s_mem_read_data
+	read_host.io.cpuReq              		<> DataReaderInst.io.cpuReq
+	read_host.io.memData             		<> DataReaderInst.io.memData
 
-	DataReaderInst.io.cpuReq.valid			<> roce.io.m_mem_read_cmd.valid
-	DataReaderInst.io.cpuReq.ready			<> roce.io.m_mem_read_cmd.ready
-	DataReaderInst.io.cpuReq.bits.addr		<> roce.io.m_mem_read_cmd.bits.vaddr
-	DataReaderInst.io.cpuReq.bits.size		<> roce.io.m_mem_read_cmd.bits.length
-	DataReaderInst.io.cpuReq.bits.callback	:= 0.U
-	DataReaderInst.io.memData				<> roce.io.s_mem_read_data
+	// DataWriterInst.io.cpuReq.valid			<> roce.io.m_mem_write_cmd.valid
+	// DataWriterInst.io.cpuReq.ready			<> roce.io.m_mem_write_cmd.ready
+	// DataWriterInst.io.cpuReq.bits.addr		<> roce.io.m_mem_write_cmd.bits.vaddr
+	// DataWriterInst.io.cpuReq.bits.size		<> roce.io.m_mem_write_cmd.bits.length
+	// DataWriterInst.io.cpuReq.bits.callback	:= 0.U
+	// DataWriterInst.io.memData				<> roce.io.m_mem_write_data
+
+	// DataReaderInst.io.cpuReq.valid			<> roce.io.m_mem_read_cmd.valid
+	// DataReaderInst.io.cpuReq.ready			<> roce.io.m_mem_read_cmd.ready
+	// DataReaderInst.io.cpuReq.bits.addr		<> roce.io.m_mem_read_cmd.bits.vaddr
+	// DataReaderInst.io.cpuReq.bits.size		<> roce.io.m_mem_read_cmd.bits.length
+	// DataReaderInst.io.cpuReq.bits.callback	:= 0.U
+	// DataReaderInst.io.memData				<> roce.io.s_mem_read_data
 
 	
-	withClockAndReset(userClk, ~userRstn.asBool) {
+	
 		val start 							= RegNext(control_reg(101) === 1.U)
 		val risingStartInit					= start && RegNext(!start)
 		val valid 							= RegInit(UInt(1.W),0.U)
@@ -200,11 +221,14 @@ class U280DynamicGreyBox extends MultiIOModule {
 		val valid_arp						= RegInit(UInt(1.W),0.U)
 		when(risingStartInit === 1.U){
 			valid_arp						:= 1.U
-		}.elsewhen(ip.io.arp_req.fire){
+		}.elsewhen(ip.io.arpinsert.fire){
 			valid_arp						:= 0.U
 		}
-		ip.io.arp_req.valid				:= valid_arp
-		ip.io.arp_req.bits				:= RegNext(control_reg(116))
+		ip.io.arp_req.valid				:= 0.U
+		ip.io.arp_req.bits				:= 0.U
+		ip.io.arpinsert.valid			:= valid_arp
+		ip.io.arpinsert.bits			:= RegNext(Cat("h1".U,control_reg(118)(15,0),control_reg(117),control_reg(116)))
+
 
 		val valid_cc						= RegInit(UInt(1.W),0.U)
 		when(risingStartInit === 1.U){
@@ -218,7 +242,7 @@ class U280DynamicGreyBox extends MultiIOModule {
 		roce.io.cc_init.bits.cc_state.rate	:= RegNext(control_reg(114))
 		roce.io.cc_init.bits.cc_state.timer	:= 0.U
 		roce.io.cc_init.bits.cc_state.divide_rate	:= RegNext(control_reg(115))
-		roce.io.cc_init.bits.cc_state.user_define:= RegNext(Cat("h0".U,control_reg(115),"h0".U(32.W),control_reg(114)))
+		roce.io.cc_init.bits.cc_state.user_define:= RegNext(Cat("h0".U,control_reg(171),control_reg(170),control_reg(169),control_reg(168),control_reg(167),control_reg(166),control_reg(165),control_reg(164),control_reg(163),control_reg(162),control_reg(161),control_reg(160)))
 		roce.io.cc_init.bits.cc_state.lock	:= false.B
 
 		val start_msg 						= RegNext(control_reg(130) === 1.U)
@@ -253,7 +277,7 @@ class U280DynamicGreyBox extends MultiIOModule {
 	// cmacInst.io.m_net_rx <> DontCare
 
 
-	val hbmDriver = withClockAndReset(io.sysClk, false.B) {Module(new HBM_DRIVER(WITH_RAMA=false, IP_CORE_NAME="HBMBlackBoxBase"))}
+	val hbmDriver = withClockAndReset(io.sysClk, false.B) {Module(new HBM_DRIVER(WITH_RAMA=false, IP_CORE_NAME="HBMBlackBox"))}
 		hbmDriver.getTCL()
 
 		for (i <- 0 until 32) {
@@ -268,17 +292,17 @@ class U280DynamicGreyBox extends MultiIOModule {
 	hbmDriver.io.axi_hbm(9) <> withClockAndReset(hbmClk,!hbmRstn){ AXIRegSlice(2)(XAXIConverter(roce.io.axi(1), userClk, userRstn, hbmClk, hbmRstn))}
 
 
-	Collector.connect_to_status_reg(status_reg, 200)
+	withClockAndReset(userClk, ~userRstn.asBool) {
 
 	val tx_timer = Timer(roce.io.s_tx_meta.fire,roce.io.m_net_tx_data.fire & roce.io.m_net_tx_data.bits.last )
 	val tx_latency = tx_timer.latency
 	val tx_start_cnt = tx_timer.cnt_start
 	val tx_end_cnt = tx_timer.cnt_end
-	val net_timer = Timer(roce.io.m_net_tx_data.fire & roce.io.s_net_rx_data.bits.last,roce.io.s_net_rx_data.fire & roce.io.m_net_tx_data.bits.last )
+	val net_timer = Timer(roce.io.m_net_tx_data.fire & roce.io.m_net_tx_data.bits.last,roce.io.s_net_rx_data.fire & roce.io.s_net_rx_data.bits.last )
 	val net_latency = net_timer.latency
 	val net_start_cnt = net_timer.cnt_start
 	val net_end_cnt = net_timer.cnt_end
-	val rx_timer = Timer(roce.io.s_net_rx_data.fire & roce.io.m_net_tx_data.bits.last , roce.io.m_mem_write_cmd.fire)
+	val rx_timer = Timer(roce.io.s_net_rx_data.fire & roce.io.s_net_rx_data.bits.last , roce.io.m_mem_write_cmd.fire)
 	val rx_latency = rx_timer.latency
 	val rx_start_cnt = rx_timer.cnt_start
 	val rx_end_cnt = rx_timer.cnt_end
@@ -293,10 +317,70 @@ class U280DynamicGreyBox extends MultiIOModule {
 	status_reg(307) := rx_start_cnt
 	status_reg(308) := rx_end_cnt
 
+
+		val timer_en = RegInit(false.B)
+		val timer_end = RegInit(false.B)
+		val done_en = RegInit(false.B)
+		val timer_cnt = RegInit(UInt(32.W), 0.U)
+		val data_cnt = RegInit(UInt(32.W), 1.U)
+		val total_data = RegNext(control_reg(140))
+
+		val time_cnt = RegInit(UInt(32.W), 0.U)
+
+		when (roce.io.s_tx_meta.fire) {
+			timer_en 	:= true.B
+		}.otherwise{
+			timer_en	:= timer_en
+		}
+
+		when (data_cnt === total_data) {
+			timer_end 	:= true.B
+		}.otherwise{
+			timer_end	:= timer_end
+		}
+
+		when (timer_en & (~timer_end)) {
+			timer_cnt 	:= timer_cnt + 1.U
+		}otherwise{
+			timer_cnt	:= timer_cnt
+		}		
+
+		time_cnt := time_cnt + 1.U
+
+		when (roce.io.s_mem_read_data.fire) {
+			data_cnt 	:= data_cnt + 1.U
+		}.otherwise{
+			data_cnt	:= data_cnt
+		}
+
+		status_reg(320)			:= data_cnt
+		status_reg(321)			:= timer_en
+		status_reg(322)			:= timer_cnt
+
+
+		//delay
+		val latency_bucket = Module{new LatencyBucket(BUCKET_SIZE=1024,LATENCY_STRIDE=32)}
+
+		latency_bucket.io.enable		:= control_reg(150)
+		latency_bucket.io.start			:= roce.io.s_tx_meta.fire
+		latency_bucket.io.end			:= roce.io.s_net_rx_data.fire
+		latency_bucket.io.bucketRdId	:= control_reg(151)
+		latency_bucket.io.resetBucket	:= reset
+
+
+
+
+		// Collector.report(latency_bucket.io.bucketValue, "REG_BUCKET_VALUE")
+		status_reg(340)			:= latency_bucket.io.bucketValue
+
+	Collector.connect_to_status_reg(status_reg, 400)
+
+	}
+
 	// val txdata = RegInit(0.U(96.W))
-	// txdata	:= RegNext(RegNext(cmacInst2.io.s_net_tx.bits.data(95,0)))
+	// txdata	:= RegNext(RegNext(cmacInst2.io.s_net_tx.bits.data(511,416)))
 	// val rxdata = RegInit(0.U(96.W))
-	// rxdata	:= RegNext(RegNext(cmacInst2.io.m_net_rx.bits.data(95,0)))
+	// rxdata	:= RegNext(RegNext(cmacInst2.io.m_net_rx.bits.data(511,416)))
 	// val rx_valid = RegInit(0.U(1.W))
 	// rx_valid	:= RegNext(RegNext(cmacInst2.io.m_net_rx.valid))
 	// val rx_ready = RegInit(0.U(1.W))
@@ -311,13 +395,13 @@ class U280DynamicGreyBox extends MultiIOModule {
 	// tx_last	:= RegNext(RegNext(cmacInst2.io.s_net_tx.bits.last))	
 	// class ila_net(seq:Seq[Data]) extends BaseILA(seq)	  
   	// val ila_net = Module(new ila_net(Seq(	
-	// 	cmacInst.io.m_net_rx.valid,
-	// 	cmacInst.io.m_net_rx.ready,
-	// 	cmacInst.io.m_net_rx.bits.last,
-	// 	// txdata,
-	// 	cmacInst.io.s_net_tx.valid,
-	// 	cmacInst.io.s_net_tx.ready,
-	// 	cmacInst.io.s_net_tx.bits.last,
+	// 	rx_valid,
+	// 	rx_ready,
+	// 	rx_lst,
+	// 	txdata,
+	// 	tx_valid,
+	// 	tx_ready,
+	// 	tx_last,
 	// 	rxdata,
 	// 	// PkgProcInst.io.idle_cycle
   	// )))

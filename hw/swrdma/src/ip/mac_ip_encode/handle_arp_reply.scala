@@ -16,10 +16,15 @@ class handle_arp_reply extends Module{
         val ethheaderout     =   Decoupled(UInt(112.W))
 	})
 
+	Collector.fire(io.data_in)
+	Collector.fire(io.data_out)
+    
+    val arp_miss    = RegInit(UInt(1.W), 0.U)
     val last        = RegInit(UInt(1.W), 1.U)
     val hit         = RegInit(UInt(1.W), 1.U)
     val temp        = RegInit(UInt(16.W), 0x0008.U)
 
+    Collector.report(arp_miss)
     val data_fifo = XQueue(new AXIS(512),16)
     val arp_fifo = XQueue(new mac_out,16)
 
@@ -50,6 +55,7 @@ class handle_arp_reply extends Module{
                     io.ethheaderout.valid       := 1.U
                     io.data_out.valid           := 1.U
                 }.otherwise{
+                    arp_miss                    := 1.U
                     io.ethheaderout.valid       := 0.U
                     io.data_out.valid           := 0.U
                 }

@@ -73,6 +73,8 @@ class Timely() extends Module{
     val Timer = RegInit(0.U(32.W))
     val ts = RegInit(0.U(32.W))
     val rate = RegInit(0.S(32.W))
+    val t_low = RegInit(0.S(32.W))
+    val t_high = RegInit(0.S(32.W))
     val new_rtt = RegInit(0.S(32.W))
     val prev_rtt = RegInit(540.S(32.W))
     val rtt_diff = RegInit(0.S(32.W))
@@ -130,6 +132,8 @@ class Timely() extends Module{
         cc_timer        := cc_reg.user_define(63,32)
         prev_rtt        := cc_reg.user_define(127,96).asTypeOf(SInt())
         rtt_diff        := cc_reg.user_define(159,128).asTypeOf(SInt())  
+        t_low           := cc_reg.user_define(191,160).asTypeOf(SInt()) 
+        t_high          := cc_reg.user_define(223,192).asTypeOf(SInt()) 
     }.elsewhen(cal_valid_shift(9) === 1.U){
         rtt_diff        := (mul_a + mul_b) >> 16.U
     }.elsewhen(cal_valid_shift(2) === 1.U){
@@ -173,7 +177,7 @@ class Timely() extends Module{
 	div1.io.s_axis_divisor_tvalid       := cal_valid_shift(1)
 	div1.io.s_axis_divisor_tdata        := new_rtt
 	div1.io.s_axis_dividend_tvalid      := cal_valid_shift(1)
-	div1.io.s_axis_dividend_tdata       := TIMELY.Thigh.S<<16.U
+	div1.io.s_axis_dividend_tdata       := t_high<<16.U
     when(div1.io.m_axis_dout_tvalid === 1.U){
         tmp0        := div1.io.m_axis_dout_tdata(63,32).asTypeOf(SInt())
     }    
@@ -209,9 +213,9 @@ class Timely() extends Module{
     rc3                 := (mul5.io.P.asTypeOf(UInt()))     
     //16
     when(cal_valid_shift(38) === 1.U){
-        when(new_rtt < TIMELY.Tlow.S){
+        when(new_rtt < t_low){
             rc          := rc0
-        }.elsewhen(new_rtt > TIMELY.Thigh.S){
+        }.elsewhen(new_rtt > t_high){
             rc          := rc1
         }.elsewhen(gradient <= 0.S){
             rc          := rc2
@@ -279,20 +283,20 @@ class Timely() extends Module{
                 io.cc_req.bits.lock             := false.B
                 io.cc_req.bits.qpn              := meta_reg.qpn
                 io.cc_req.bits.cc_state.credit  := 0.U
-                io.cc_req.bits.cc_state.user_define := Cat(rtt_diff,prev_rtt,divede_rate,cc_timer,rc)          
+                io.cc_req.bits.cc_state.user_define := Cat(t_high,t_low,rtt_diff,prev_rtt,divede_rate,cc_timer,rc)          
                 state                           := sIDLE
             }
         }
     }
 
-        class ila_timely(seq:Seq[Data]) extends BaseILA(seq)
-        val inst_ila_timely = Module(new ila_timely(Seq(
-            state,
-            new_rtt,
-            rc_reg
-        )))
+        // class ila_timely(seq:Seq[Data]) extends BaseILA(seq)
+        // val inst_ila_timely = Module(new ila_timely(Seq(
+        //     state,
+        //     new_rtt,
+        //     rc_reg
+        // )))
 
-        inst_ila_timely.connect(clock)
+        // inst_ila_timely.connect(clock)
 
 }
 

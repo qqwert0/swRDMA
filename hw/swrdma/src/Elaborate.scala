@@ -26,6 +26,7 @@ object elaborate extends App {
     case "prdma_top" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new prdma_top()),dir,OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
 		case "U280DynamicGreyBox" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new U280DynamicGreyBox()),dir,OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
     case "swrdma_top" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new swrdma_top()),dir,OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
+    case "swrdma10_top" => stage.execute(arr,Seq(ChiselGeneratorAnnotation(() => new swrdma10_top()),dir,OutputFileAnnotation(args(0)), OutputAnnotationFileAnnotation(args(0)), ChiselOutputFileAnnotation(args(0))))
     // case "prdma_top" => (new ChiselStage()).emitSystemVerilog(
     //     new prdma_top(),
     //     Array("--target-dir", "Verilog", "--full-stacktrace", "--output-annotation-file", "Foo.sv")

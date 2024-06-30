@@ -137,7 +137,7 @@ class TimelyTx() extends Module{
                 // io.cc_meta_out.bits.qpn         := tx_core.io.user_csr_rd(1.U+pkg_meta_addr_base)
                 io.cc_meta_out.bits.op_code     := meta_reg.op_code
                 io.cc_meta_out.bits.header_len  := (CONFIG.SWRDMA_HEADER_LEN/8).U
-                io.cc_meta_out.bits.user_define := "h0".U//Cat("h0".U,Timer) 
+                io.cc_meta_out.bits.user_define := 0.U//Cat("h0".U,Timer) 
                 io.cc_req.valid                 := 1.U
                 io.cc_req.bits.is_wr            := true.B
                 io.cc_req.bits.lock             := false.B
@@ -148,17 +148,17 @@ class TimelyTx() extends Module{
         }
     }
 
-	// val len_log = WireInit(0.U(5.W))
-	// len_log	:= meta_reg.len_log(4,0)
+	val len_log = WireInit(0.U(5.W))
+	len_log	:= meta_reg.len_log(4,0)
 
-    //     class ila_timelytx(seq:Seq[Data]) extends BaseILA(seq)
-    //     val inst_ila_timelytx = Module(new ila_timelytx(Seq(
-    //         state,
-    //         time_diff,
-    //         divide_rate,
-    //     )))
+        class ila_timelytx(seq:Seq[Data]) extends BaseILA(seq)
+        val inst_ila_timelytx = Module(new ila_timelytx(Seq(
+            state,
+            time_diff,
+            divide_rate,
+        )))
 
-    //     inst_ila_timelytx.connect(clock)
+        inst_ila_timelytx.connect(clock)
 
 
 }

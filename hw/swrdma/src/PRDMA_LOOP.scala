@@ -94,7 +94,7 @@ class PRDMA_LOOP() extends Module{
 	    write_host(i).io.cpuReq.bits.size	<> io.m_mem_write_cmd(i).bits.length
         io.m_mem_write_data(i)          <> write_host(i).io.memData
         roce(i).io.cpu_started          := io.cpu_started(i)
-        roce(i).io.tx_delay             := 10.U
+        roce(i).io.tx_delay             := 1.U
 
 
         // roce(i).io.axi(0).ar.ready      := 1.U

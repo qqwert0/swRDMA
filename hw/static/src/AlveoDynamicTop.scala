@@ -17,17 +17,17 @@ class AlveoDynamicBlackBox (
         val io_sysClk                                   = Input(UInt(1.W))
         val io_cmacClk                                  = Input(UInt(1.W))
 
-        val io_cmacPin_tx_p                             = if (ENABLE_CMAC_1) {Some(Output(UInt(4.W)))} else None
-        val io_cmacPin_tx_n                             = if (ENABLE_CMAC_1) {Some(Output(UInt(4.W)))} else None
-        val io_cmacPin_rx_p                             = if (ENABLE_CMAC_1) {Some(Input(UInt(4.W)))} else None
-        val io_cmacPin_rx_n                             = if (ENABLE_CMAC_1) {Some(Input(UInt(4.W)))} else None
+        val io_cmacPin_tx_p                             = if (ENABLE_CMAC_1) {Some(Output(UInt(1.W)))} else None
+        val io_cmacPin_tx_n                             = if (ENABLE_CMAC_1) {Some(Output(UInt(1.W)))} else None
+        val io_cmacPin_rx_p                             = if (ENABLE_CMAC_1) {Some(Input(UInt(1.W)))} else None
+        val io_cmacPin_rx_n                             = if (ENABLE_CMAC_1) {Some(Input(UInt(1.W)))} else None
         val io_cmacPin_gt_clk_p                         = if (ENABLE_CMAC_1) {Some(Input(UInt(1.W)))} else None
         val io_cmacPin_gt_clk_n                         = if (ENABLE_CMAC_1) {Some(Input(UInt(1.W)))} else None
 
-        val io_cmacPin2_tx_p                            = if (ENABLE_CMAC_2) {Some(Output(UInt(4.W)))} else None
-        val io_cmacPin2_tx_n                            = if (ENABLE_CMAC_2) {Some(Output(UInt(4.W)))} else None
-        val io_cmacPin2_rx_p                            = if (ENABLE_CMAC_2) {Some(Input(UInt(4.W)))} else None
-        val io_cmacPin2_rx_n                            = if (ENABLE_CMAC_2) {Some(Input(UInt(4.W)))} else None
+        val io_cmacPin2_tx_p                            = if (ENABLE_CMAC_2) {Some(Output(UInt(1.W)))} else None
+        val io_cmacPin2_tx_n                            = if (ENABLE_CMAC_2) {Some(Output(UInt(1.W)))} else None
+        val io_cmacPin2_rx_p                            = if (ENABLE_CMAC_2) {Some(Input(UInt(1.W)))} else None
+        val io_cmacPin2_rx_n                            = if (ENABLE_CMAC_2) {Some(Input(UInt(1.W)))} else None
         val io_cmacPin2_gt_clk_p                        = if (ENABLE_CMAC_2) {Some(Input(UInt(1.W)))} else None
         val io_cmacPin2_gt_clk_n                        = if (ENABLE_CMAC_2) {Some(Input(UInt(1.W)))} else None
 

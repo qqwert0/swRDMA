@@ -151,7 +151,7 @@ class Dcqcn() extends Module{
         }
         T               := T + 1.U
     }.elsewhen((cal_valid_shift(8) === 1.U)&((Timer - last_time)>=DCQCN.T_55us.U)&(T>5.U)){
-        when(rt > 11500.U){
+        when(rt > 1200.U){
             rt              := rt
         }.otherwise{
             rt              := rt + DCQCN.Rai.U
@@ -273,16 +273,16 @@ class Dcqcn() extends Module{
         }
     }
 
-        // class ila_timely(seq:Seq[Data]) extends BaseILA(seq)
-        // val inst_ila_timely = Module(new ila_timely(Seq(
-        //     state,
-        //     ecn,
-        //     rc_reg,
-        //     rate,
-        //     rt,
-        // )))
+        class ila_timely(seq:Seq[Data]) extends BaseILA(seq)
+        val inst_ila_timely = Module(new ila_timely(Seq(
+            state,
+            ecn,
+            rc_reg,
+            rate,
+            rt,
+        )))
 
-        // inst_ila_timely.connect(clock)
+        inst_ila_timely.connect(clock)
 
 }
 
