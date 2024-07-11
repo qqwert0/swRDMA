@@ -19,3 +19,6 @@
 [submodule "hw/ddr"]
 	path = hw/ddr
 	url = git@github.com:rc4ml/ddr.git
+[submodule "sw/libr/HdrHistogram"]
+	path = sw/libr/HdrHistogram
+	url = https://github.com/HdrHistogram/HdrHistogram_c.git
